@@ -1,0 +1,11 @@
+{
+  "name": "@code-consolidator/generator",
+  "version": "1.0.0",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "cc-gen": "./dist/generator.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts && tsup src/generator.ts --format cjs --dts && tsup src/bin/generator.ts --format cjs"
+  }
+}

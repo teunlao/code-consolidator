@@ -42,6 +42,14 @@ importers:
         specifier: 5.3.3
         version: 5.3.3(@types/node@20.14.10)
 
+  packages/library: {}
+
+  packages/playground:
+    dependencies:
+      '@code-consolidator/generator':
+        specifier: workspace:*
+        version: link:../library
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':
