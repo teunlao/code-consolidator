@@ -11,21 +11,40 @@ export function generateFilesStructure(outputPath: string): void {
     '.git',
     'dist',
     'build',
-    '.nx',
+    'tmp',
+    'coverage',
     'nx',
-    '.idea',
-    '.vscode',
-    '.next',
-    '.nuxt',
+    '.nx',
   ];
-  const ignoredFiles = ['.DS_Store'];
+  const ignoredFiles = [
+    '.DS_Store',
+    '*.log',
+    '*.tmp',
+    '*.swp',
+    'yarn.lock',
+    'package-lock.json',
+    'pnpm-lock.yaml',
+  ];
 
   function shouldIgnore(file: string, stat: fs.Stats): boolean {
     if (stat.isDirectory() && ignoredDirectories.includes(file)) {
       return true;
     }
-    if (stat.isFile() && ignoredFiles.includes(file)) {
-      return true;
+    if (stat.isFile()) {
+      // Проверка на полное совпадение
+      if (ignoredFiles.includes(file)) {
+        return true;
+      }
+      // Проверка на шаблоны
+      for (const pattern of ignoredFiles) {
+        if (
+          new RegExp(pattern.replace(/\./g, '\\.').replace(/\*/g, '.*')).test(
+            file,
+          )
+        ) {
+          return true;
+        }
+      }
     }
     return false;
   }
@@ -54,10 +73,11 @@ export function generateFilesStructure(outputPath: string): void {
     let obj = '';
     const indent = ' '.repeat(indentLevel * 4);
     for (const key in fileTree) {
+      const quotedKey = `"${key}"`; // Ключ в кавычках
       if (typeof fileTree[key] === 'string') {
-        obj += `${indent}${key}: '${fileTree[key]}',\n`;
+        obj += `${indent}${quotedKey}: '${fileTree[key]}',\n`;
       } else {
-        obj += `${indent}${key}: {\n`;
+        obj += `${indent}${quotedKey}: {\n`;
         obj += generateObject(fileTree[key] as FileTree, indentLevel + 1);
         obj += `${indent}},\n`;
       }
