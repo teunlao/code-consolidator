@@ -6,11 +6,29 @@ export function generateFilesStructure(outputPath: string): void {
     [key: string]: string | FileTree;
   }
 
+  const ignoredDirectories = ['node_modules', '.git', 'dist', 'build'];
+  const ignoredFiles = ['.DS_Store'];
+
+  function shouldIgnore(file: string, stat: fs.Stats): boolean {
+    if (stat.isDirectory() && ignoredDirectories.includes(file)) {
+      return true;
+    }
+    if (stat.isFile() && ignoredFiles.includes(file)) {
+      return true;
+    }
+    return false;
+  }
+
   function getAllFiles(dir: string, fileTree: FileTree = {}): FileTree {
     const files = fs.readdirSync(dir);
     files.forEach((file) => {
       const fullPath = path.join(dir, file);
       const stat = fs.statSync(fullPath);
+
+      if (shouldIgnore(file, stat)) {
+        return;
+      }
+
       if (stat.isDirectory()) {
         fileTree[file.replace(/[^a-zA-Z0-9]/g, '_')] = getAllFiles(fullPath);
       } else {
