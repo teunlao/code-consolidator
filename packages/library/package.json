@@ -11,11 +11,11 @@
     "generator"
   ],
   "bin": {
-    "cc-gen": "./dist/bin/generator.js"
+    "cc-gen": "dist/bin/generator.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/teunlao/code-consolidator",
+    "url": "git+https://github.com/teunlao/code-consolidator.git",
     "directory": "packages/library"
   },
   "files": [
