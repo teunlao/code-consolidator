@@ -5,6 +5,8 @@ dist/
 **/dist/
 gen.txt
 project_files.ts
+get.config.ts
+out.gen.txt
 
 # Logs
 logs

@@ -1,8 +1,12 @@
+// packages/library/src/combine-files.ts
+
 import * as fs from 'fs';
 import * as path from 'path';
 
+type InputFile = string | { [key: string]: string | InputFile };
+
 interface Config {
-  inputFiles: string[];
+  inputFiles: InputFile[];
   outputFile: string;
   includeComments?: boolean;
 }
@@ -34,12 +38,14 @@ function readFileContent(
     return '';
   }
 }
+
 function removeComments(content: string): string {
   return content
     .replace(/\/\/.*$/gm, '')
     .replace(/\/\*[\s\S]*?\*\/+/g, '')
     .replace(/^\s*[\r\n]/gm, '');
 }
+
 function writeToFile(content: string, outputPath: string): void {
   try {
     fs.writeFileSync(outputPath, content, 'utf-8');
@@ -47,13 +53,37 @@ function writeToFile(content: string, outputPath: string): void {
     console.error(`Ошибка при записи в файл ${outputPath}: ${error.message}`);
   }
 }
+
 function getRelativePath(filePath: string): string {
   const projectRoot = path.resolve('.');
   return path.relative(projectRoot, filePath);
 }
+
+function flattenInputFiles(inputFiles: InputFile[]): string[] {
+  let flattenedFiles: string[] = [];
+
+  inputFiles.forEach((file) => {
+    if (typeof file === 'string') {
+      flattenedFiles.push(file);
+    } else if (typeof file === 'object') {
+      for (const key in file) {
+        const value = file[key];
+        if (typeof value === 'string') {
+          flattenedFiles.push(value);
+        } else {
+          flattenedFiles = flattenedFiles.concat(flattenInputFiles([value]));
+        }
+      }
+    }
+  });
+
+  return flattenedFiles;
+}
+
 function combineFiles(config: Config): void {
+  const flattenedFiles = flattenInputFiles(config.inputFiles);
   let combinedContent = '';
-  for (const filePath of config.inputFiles) {
+  for (const filePath of flattenedFiles) {
     const absolutePath = path.resolve(filePath);
     const relativePath = getRelativePath(absolutePath);
     const fileContent = readFileContent(absolutePath, config.includeComments);
