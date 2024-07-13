@@ -6,7 +6,18 @@ export function generateFilesStructure(outputPath: string): void {
     [key: string]: string | FileTree;
   }
 
-  const ignoredDirectories = ['node_modules', '.git', 'dist', 'build'];
+  const ignoredDirectories = [
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    '.nx',
+    'nx',
+    '.idea',
+    '.vscode',
+    '.next',
+    '.nuxt',
+  ];
   const ignoredFiles = ['.DS_Store'];
 
   function shouldIgnore(file: string, stat: fs.Stats): boolean {
