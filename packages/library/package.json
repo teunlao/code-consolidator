@@ -1,12 +1,26 @@
 {
-  "name": "@code-consolidator/generator",
-  "version": "1.0.0",
+  "name": "@teunlao/code-consolidator",
+  "author": "teunlao (teunlao@gmail.com)",
+  "license": "MIT",
+  "sideEffects": false,
+  "version": "0.0.1",
   "types": "dist/index.d.ts",
+  "keywords": [
+    "code",
+    "llm",
+    "generator"
+  ],
   "bin": {
     "cc-gen": "./dist/bin/generator.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teunlao/code-consolidator",
+    "directory": "packages/library"
+  },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "exports": {
     ".": {
@@ -16,7 +30,6 @@
     }
   },
   "scripts": {
-    "build_next": "tsup",
-    "build": "tsup src/index.ts --format cjs,esm --dts && tsup src/generator.ts --format cjs --dts && tsup src/bin/generator.ts --format cjs"
+    "build": "tsup"
   }
 }

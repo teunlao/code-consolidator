@@ -1,14 +1,19 @@
 {
   "name": "@code-consolidator/root",
+  "author": "teunlao (teunlao@gmail.com)",
+  "license": "MIT",
+  "sideEffects": false,
   "version": "0.0.1",
+  "keywords": [
+    "code",
+    "llm",
+    "generator"
+  ],
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@types/node": "20.14.10",
     "@typescript-eslint/eslint-plugin": "7.16.0",
