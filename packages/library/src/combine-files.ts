@@ -1,31 +1,24 @@
-// Переименуем файл index.ts в combineFiles.ts
-
-// combineFiles.ts
 import * as fs from 'fs';
 import * as path from 'path';
-import { projectFiles } from '../../../project_files';
+
 interface Config {
   inputFiles: string[];
   outputFile: string;
   includeComments?: boolean;
 }
-const config: Config = {
-  inputFiles: [
-    projectFiles._editorconfig,
-    projectFiles.tsconfig_json,
-    projectFiles.package_json,
-    projectFiles._eslintrc_js,
-    projectFiles._prettierrc,
-    projectFiles.packages.library.src.combine_files_ts,
-    projectFiles.packages.library.src.generator_ts,
-    projectFiles.packages.library.src.index_ts,
-    projectFiles.packages.library.packages_json,
-    projectFiles.packages.playground.packages_json,
-    projectFiles.packages.playground.src.index_ts
-  ],
+
+const baseConfig: Config = {
+  inputFiles: [],
   outputFile: 'project_code.txt',
   includeComments: false,
 };
+
+export function defineConsolidatorConfig(config: Config = baseConfig) {
+  return {
+    generate: () => combineFiles(config),
+  };
+}
+
 function readFileContent(
   filePath: string,
   includeComments: boolean = true,
@@ -36,7 +29,7 @@ function readFileContent(
       content = removeComments(content);
     }
     return content;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Ошибка при чтении файла ${filePath}: ${error.message}`);
     return '';
   }
@@ -50,7 +43,7 @@ function removeComments(content: string): string {
 function writeToFile(content: string, outputPath: string): void {
   try {
     fs.writeFileSync(outputPath, content, 'utf-8');
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Ошибка при записи в файл ${outputPath}: ${error.message}`);
   }
 }
@@ -68,4 +61,3 @@ function combineFiles(config: Config): void {
   }
   writeToFile(combinedContent, config.outputFile);
 }
-combineFiles(config);

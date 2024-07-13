@@ -1,6 +1,10 @@
 # Ignore node_modules directories
 node_modules/
 **/node_modules/
+dist/
+**/dist/
+gen.txt
+project_files.ts
 
 # Logs
 logs

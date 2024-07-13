@@ -3,9 +3,20 @@
   "version": "1.0.0",
   "types": "dist/index.d.ts",
   "bin": {
-    "cc-gen": "./dist/generator.js"
+    "cc-gen": "./dist/bin/generator.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build_next": "tsup",
     "build": "tsup src/index.ts --format cjs,esm --dts && tsup src/generator.ts --format cjs --dts && tsup src/bin/generator.ts --format cjs"
   }
 }

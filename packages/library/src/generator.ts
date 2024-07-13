@@ -1,23 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export interface GeneratorConfig {
-  outputFile: string;
-}
-
-// Функция для определения конфигурации генератора
-export function defineGeneratorConfig(
-  config: GeneratorConfig,
-): GeneratorConfig {
-  return config;
-}
-
-// Функция для запуска генератора с указанным путем к конфигурационному файлу
-export function runGenerator(configPath: string): void {
-  const config: GeneratorConfig = require(configPath);
-
-  console.log('config', config);
-
+export function generateFilesStructure(outputPath: string): void {
   interface FileTree {
     [key: string]: string | FileTree;
   }
@@ -67,5 +51,5 @@ export function runGenerator(configPath: string): void {
   const projectRoot = path.resolve('.');
   const fileTree = getAllFiles(projectRoot);
   const object = generateObject(fileTree);
-  writeObjectToFile(object, config.outputFile);
+  writeObjectToFile(object, outputPath);
 }

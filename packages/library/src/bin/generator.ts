@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 
-import { runGenerator } from '../generator';
+import { generateFilesStructure } from '../generator';
 import path from 'path';
-console.log('process.argv', process.argv);
-// Получение пути к конфигурационному файлу из аргументов командной строки
 
-let configName = process.argv[2];
+const ouputFile = process.argv[2] ?? 'project_files.ts';
+const outputPath = path.resolve(process.cwd(), ouputFile);
 
-configName = configName ?? 'cc.config.js';
-
-const configPath = path.resolve(configName);
-runGenerator(configPath);
+generateFilesStructure(outputPath);
