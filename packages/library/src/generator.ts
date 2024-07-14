@@ -26,16 +26,46 @@ export function generateFilesStructure(outputPath: string): void {
     'pnpm-lock.yaml',
   ];
 
+  const ignoredExtensions = [
+    '.svg',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.bmp',
+    '.ico',
+    '.webp',
+    '.tiff',
+    '.pdf',
+    '.exe',
+    '.dll',
+    '.so',
+    '.dylib',
+    '.zip',
+    '.tar',
+    '.gz',
+    '.rar',
+    '.7z',
+    '.mp3',
+    '.mp4',
+    '.avi',
+    '.mov',
+    '.wmv',
+    '.flv',
+    '.ttf',
+    '.woff',
+    '.woff2',
+    '.eot',
+  ];
+
   function shouldIgnore(file: string, stat: fs.Stats): boolean {
     if (stat.isDirectory() && ignoredDirectories.includes(file)) {
       return true;
     }
     if (stat.isFile()) {
-      // Проверка на полное совпадение
       if (ignoredFiles.includes(file)) {
         return true;
       }
-      // Проверка на шаблоны
       for (const pattern of ignoredFiles) {
         if (
           new RegExp(pattern.replace(/\./g, '\\.').replace(/\*/g, '.*')).test(
@@ -44,6 +74,10 @@ export function generateFilesStructure(outputPath: string): void {
         ) {
           return true;
         }
+      }
+      const ext = path.extname(file).toLowerCase();
+      if (ignoredExtensions.includes(ext)) {
+        return true;
       }
     }
     return false;
