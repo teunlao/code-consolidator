@@ -1,6 +1,7 @@
+// packages/library/src/combine-files.ts
+
 import * as fs from 'fs';
 import * as path from 'path';
-import PDFDocument from 'pdfkit';
 
 type InputFile = string | { [key: string]: string | InputFile };
 
@@ -12,7 +13,7 @@ interface Config {
 
 const baseConfig: Config = {
   inputFiles: [],
-  outputFile: 'project_code.pdf',
+  outputFile: 'project_code.txt',
   includeComments: false,
 };
 
@@ -47,24 +48,9 @@ function removeComments(content: string): string {
 
 function writeToFile(content: string, outputPath: string): void {
   try {
-    const doc = new PDFDocument();
-    const stream = fs.createWriteStream(outputPath);
-
-    doc.pipe(stream);
-
-    const lines = content.split('\n');
-
-    lines.forEach((line) => {
-      doc.text(line);
-    });
-
-    doc.end();
-
-    stream.on('finish', () => {
-      console.log(`PDF успешно создан: ${outputPath}`);
-    });
+    fs.writeFileSync(outputPath, content, 'utf-8');
   } catch (error: any) {
-    console.error(`Ошибка при создании PDF ${outputPath}: ${error.message}`);
+    console.error(`Ошибка при записи в файл ${outputPath}: ${error.message}`);
   }
 }
 
