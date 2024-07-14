@@ -15,6 +15,8 @@ export function generateFilesStructure(outputPath: string): void {
     'coverage',
     'nx',
     '.nx',
+    '.next',
+    '.nuxt',
   ];
   const ignoredFiles = [
     '.DS_Store',
@@ -24,9 +26,15 @@ export function generateFilesStructure(outputPath: string): void {
     'yarn.lock',
     'package-lock.json',
     'pnpm-lock.yaml',
+    'project_files.ts',
+    'out.gen.pdf',
+    'project_code.txt',
+    'project_code.pdf',
+    'out.gen.txt',
   ];
 
   const ignoredExtensions = [
+    '.old',
     '.svg',
     '.png',
     '.jpg',
@@ -56,6 +64,7 @@ export function generateFilesStructure(outputPath: string): void {
     '.woff',
     '.woff2',
     '.eot',
+    '.pdf',
   ];
 
   function shouldIgnore(file: string, stat: fs.Stats): boolean {

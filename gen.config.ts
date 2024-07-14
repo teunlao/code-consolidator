@@ -3,7 +3,7 @@ import { projectFiles } from './project_files';
 
 const config = defineConsolidatorConfig({
   inputFiles: [projectFiles],
-  outputFile: 'out.gen.txt',
+  outputFile: 'out.gen.pdf',
   includeComments: true,
 });
 

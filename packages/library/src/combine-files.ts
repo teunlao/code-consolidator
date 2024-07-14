@@ -2,6 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import PDFDocument from 'pdfkit';
 
 type InputFile = string | { [key: string]: string | InputFile };
 
@@ -46,14 +47,6 @@ function removeComments(content: string): string {
     .replace(/^\s*[\r\n]/gm, '');
 }
 
-function writeToFile(content: string, outputPath: string): void {
-  try {
-    fs.writeFileSync(outputPath, content, 'utf-8');
-  } catch (error: any) {
-    console.error(`Ошибка при записи в файл ${outputPath}: ${error.message}`);
-  }
-}
-
 function getRelativePath(filePath: string): string {
   const projectRoot = path.resolve('.');
   return path.relative(projectRoot, filePath);
@@ -82,12 +75,21 @@ function flattenInputFiles(inputFiles: InputFile[]): string[] {
 
 function combineFiles(config: Config): void {
   const flattenedFiles = flattenInputFiles(config.inputFiles);
-  let combinedContent = '';
+  const doc = new PDFDocument();
+  const stream = fs.createWriteStream(config.outputFile);
+  doc.pipe(stream);
+
   for (const filePath of flattenedFiles) {
     const absolutePath = path.resolve(filePath);
     const relativePath = getRelativePath(absolutePath);
     const fileContent = readFileContent(absolutePath, config.includeComments);
-    combinedContent += `\n|------------ Content of ${relativePath} -------------|\n\n${fileContent}\n`;
+
+    doc.fontSize(14).text(`Content of ${relativePath}`, { underline: true });
+    doc.moveDown();
+    doc.fontSize(10).text(fileContent);
+    doc.addPage();
   }
-  writeToFile(combinedContent, config.outputFile);
+
+  doc.end();
+  console.log(`PDF created: ${config.outputFile}`);
 }
