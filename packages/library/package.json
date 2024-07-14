@@ -3,7 +3,7 @@
   "author": "teunlao (teunlao@gmail.com)",
   "license": "MIT",
   "sideEffects": false,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "types": "dist/index.d.ts",
   "keywords": [
     "code",
@@ -31,5 +31,9 @@
   },
   "scripts": {
     "build": "tsup"
+  },
+  "dependencies": {
+    "@types/pdfkit": "0.13.4",
+    "pdfkit": "0.15.0"
   }
 }
