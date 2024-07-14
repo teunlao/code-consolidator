@@ -10,12 +10,14 @@ interface Config {
   inputFiles: InputFile[];
   outputFile: string;
   includeComments?: boolean;
+  newPageForEachFile?: boolean;
 }
 
 const baseConfig: Config = {
   inputFiles: [],
   outputFile: 'project_code.txt',
   includeComments: false,
+  newPageForEachFile: true,
 };
 
 export function defineConsolidatorConfig(config: Config = baseConfig) {
@@ -79,7 +81,8 @@ function combineFiles(config: Config): void {
   const stream = fs.createWriteStream(config.outputFile);
   doc.pipe(stream);
 
-  for (const filePath of flattenedFiles) {
+  for (let i = 0; i < flattenedFiles.length; i++) {
+    const filePath = flattenedFiles[i];
     const absolutePath = path.resolve(filePath);
     const relativePath = getRelativePath(absolutePath);
     const fileContent = readFileContent(absolutePath, config.includeComments);
@@ -87,7 +90,12 @@ function combineFiles(config: Config): void {
     doc.fontSize(14).text(`Content of ${relativePath}`, { underline: true });
     doc.moveDown();
     doc.fontSize(10).text(fileContent);
-    doc.addPage();
+
+    if (config.newPageForEachFile && i < flattenedFiles.length - 1) {
+      doc.addPage();
+    } else if (!config.newPageForEachFile) {
+      doc.moveDown(2);
+    }
   }
 
   doc.end();
