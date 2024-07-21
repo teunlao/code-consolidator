@@ -3,7 +3,7 @@
   "author": "teunlao (teunlao@gmail.com)",
   "license": "MIT",
   "sideEffects": false,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "types": "dist/index.d.ts",
   "keywords": [
     "code",

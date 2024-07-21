@@ -6,11 +6,30 @@ import PDFDocument from 'pdfkit';
 
 type InputFile = string | { [key: string]: string | InputFile };
 
+function shouldIgnorePath(
+  path: string,
+  ignorePaths?: (string | RegExp)[],
+): boolean {
+  if (!ignorePaths) {
+    return false;
+  }
+
+  return ignorePaths.some((pattern) => {
+    if (typeof pattern === 'string') {
+      return path.includes(pattern);
+    } else if (pattern instanceof RegExp) {
+      return pattern.test(path);
+    }
+    return false;
+  });
+}
+
 interface Config {
   inputFiles: InputFile[];
   outputFile: string;
   includeComments?: boolean;
   newPageForEachFile?: boolean;
+  ignorePaths?: (string | RegExp)[];
 }
 
 const baseConfig: Config = {
@@ -76,8 +95,16 @@ function flattenInputFiles(inputFiles: InputFile[]): string[] {
 }
 
 function combineFiles(config: Config): void {
+  // привет мир
   const flattenedFiles = flattenInputFiles(config.inputFiles);
   const doc = new PDFDocument();
+
+  doc.registerFont(
+    'Roboto',
+    path.resolve(__dirname, '../', 'Roboto-Regular.ttf'),
+  );
+  doc.font('Roboto', 'Roboto', 12);
+
   const stream = fs.createWriteStream(config.outputFile);
   doc.pipe(stream);
 
@@ -85,8 +112,13 @@ function combineFiles(config: Config): void {
     const filePath = flattenedFiles[i];
     const absolutePath = path.resolve(filePath);
     const relativePath = getRelativePath(absolutePath);
-    const fileContent = readFileContent(absolutePath, config.includeComments);
 
+    // Проверяем, нужно ли игнорировать этот путь
+    if (shouldIgnorePath(relativePath, config.ignorePaths)) {
+      continue;
+    }
+
+    const fileContent = readFileContent(absolutePath, config.includeComments);
     doc.fontSize(14).text(`Content of ${relativePath}`, { underline: true });
     doc.moveDown();
     doc.fontSize(10).text(fileContent);

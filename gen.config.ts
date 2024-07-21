@@ -6,6 +6,7 @@ const config = defineConsolidatorConfig({
   outputFile: 'out.gen.pdf',
   includeComments: true,
   newPageForEachFile: false,
+  ignorePaths: ['.idea', 'tsconfig.json'],
 });
 
 config.generate();

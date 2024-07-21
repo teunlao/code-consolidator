@@ -12,7 +12,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "pnpm --filter @teunlao/code-consolidator run build",
+    "publish": "pnpm --filter @teunlao/code-consolidator run publish",
+    "gen:types": "npx cc-gen",
+    "gen:project": "npx tsx gen.config.ts"
   },
   "devDependencies": {
     "@teunlao/code-consolidator": "workspace:*",
