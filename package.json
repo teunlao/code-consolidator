@@ -13,7 +13,7 @@
   "main": "index.js",
   "scripts": {
     "build": "pnpm --filter @teunlao/code-consolidator run build",
-    "publish": "pnpm --filter @teunlao/code-consolidator run publish",
+    "publish": "pnpm --filter @teunlao/code-consolidator publish",
     "gen:types": "npx cc-gen",
     "gen:project": "npx tsx gen.config.ts"
   },
