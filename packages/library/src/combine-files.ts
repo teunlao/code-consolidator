@@ -99,10 +99,7 @@ function combineFiles(config: Config): void {
   const flattenedFiles = flattenInputFiles(config.inputFiles);
   const doc = new PDFDocument();
 
-  doc.registerFont(
-    'Roboto',
-    path.resolve(__dirname, '../', 'Roboto-Regular.ttf'),
-  );
+  doc.registerFont('Roboto', path.resolve(__dirname, 'Roboto-Regular.ttf'));
   doc.font('Roboto', 'Roboto', 12);
 
   const stream = fs.createWriteStream(config.outputFile);
