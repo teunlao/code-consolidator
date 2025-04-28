@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { OpenFileButton } from "./open-file-button";
 
 interface ConfigPanelProps {
   includeComments: boolean;
@@ -16,6 +17,7 @@ interface ConfigPanelProps {
   onOutputFileNameChange: (value: string) => void;
   onGenerate: () => void;
   selectedFilesCount: number;
+  lastGeneratedPdfPath?: string;
 }
 
 export function ConfigPanel({
@@ -26,8 +28,12 @@ export function ConfigPanel({
   outputFileName,
   onOutputFileNameChange,
   onGenerate,
-  selectedFilesCount
+  selectedFilesCount,
+  lastGeneratedPdfPath
 }: ConfigPanelProps) {
+  // Определяем путь для вывода файла (для использования в кнопке открытия)
+  // Используем только существующий путь, если он есть
+  const pdfPath = lastGeneratedPdfPath || '';
   return (
     <div className="border border-gray-700 rounded-md p-4 space-y-4 bg-gray-800">
       <h2 className="text-lg font-semibold text-gray-100">Настройки генерации</h2>
@@ -66,18 +72,30 @@ export function ConfigPanel({
       </div>
       
       <div className="pt-2">
-        <Button 
-          onClick={onGenerate}
-          disabled={selectedFilesCount === 0}
-          className={cn(
-            "w-full", 
-            selectedFilesCount === 0 
-              ? "bg-gray-600 cursor-not-allowed opacity-70" 
-              : "bg-blue-600 hover:bg-blue-700 text-white"
+        <div className="flex gap-2">
+          <Button 
+            onClick={onGenerate}
+            disabled={selectedFilesCount === 0}
+            className={cn(
+              "flex-1", 
+              selectedFilesCount === 0 
+                ? "bg-gray-600 cursor-not-allowed opacity-70" 
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+            )}
+          >
+            Сгенерировать PDF{selectedFilesCount > 0 ? ` (${selectedFilesCount} файлов)` : ''}
+          </Button>
+          
+          {pdfPath && (
+            <OpenFileButton 
+              filePath={pdfPath}
+              variant="outline"
+              size="default"
+              className="bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200 px-3"
+              tooltipText="Открыть сгенерированный PDF"
+            />
           )}
-        >
-          Сгенерировать PDF{selectedFilesCount > 0 ? ` (${selectedFilesCount} файлов)` : ''}
-        </Button>
+        </div>
       </div>
     </div>
   );

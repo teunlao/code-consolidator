@@ -6,7 +6,8 @@ import { ConfigPanel } from '@/components/config-panel';
 import { SearchFilter } from '@/components/search-filter';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Check, Loader2, RotateCcw } from 'lucide-react';
+import { Check, Loader2, RotateCcw, FolderOpen } from 'lucide-react';
+import { OpenFileButton } from '@/components/open-file-button';
 import { FileNode, FilterSettings } from '@/lib/types';
 import { FilterSettingsButton } from '@/components/filter-settings';
 import { ProjectSelector } from '@/components/project-manager';
@@ -262,6 +263,7 @@ export default function Home() {
             }
             onGenerate={handleGeneratePdf}
             selectedFilesCount={selectedFilesCount}
+            lastGeneratedPdfPath={generatedPdfPath}
           />
         </div>
       </div>
@@ -278,9 +280,19 @@ export default function Home() {
           
           <div className="py-4">
             <p className="mb-4 text-gray-300">Файл сохранен по пути:</p>
-            <code className="bg-gray-900 text-gray-300 p-2 rounded block overflow-x-auto border border-gray-700">
-              {generatedPdfPath}
-            </code>
+            <div className="relative bg-gray-900 p-2 rounded border border-gray-700">
+              <code className="block w-full text-gray-300 overflow-x-auto pr-10">
+                {generatedPdfPath}
+              </code>
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                <OpenFileButton 
+                  filePath={generatedPdfPath} 
+                  variant="ghost" 
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-200 hover:bg-transparent rounded-full"
+                  tooltipText="Открыть местоположение файла"
+                />
+              </div>
+            </div>
           </div>
           
           <div className="flex justify-end">
