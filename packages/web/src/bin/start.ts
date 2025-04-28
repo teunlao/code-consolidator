@@ -8,70 +8,11 @@ import * as http from 'http';
 // Путь к директории пакета
 const packageDir = path.resolve(__dirname, '../..');
 
-// Проверяем есть ли директория 'dist' для next.js приложения
-const distDir = path.join(packageDir, '.next');
-const hasBuildDir = fs.existsSync(distDir);
+// Путь к бинарной версии next из пакета
+const nextBinPath = path.join(packageDir, 'node_modules', '.bin', 'next');
 
 // Порт для запуска приложения
 const PORT = process.env.PORT || 3333;
-
-// Функция для запуска Next.js приложения
-async function startApp() {
-  console.log('Starting Code Consolidator UI...');
-  
-  let nextCommand = 'next';
-  let args = ['start', '--port', PORT.toString()];
-  
-  // Если папки .next нет, сначала нужно выполнить сборку
-  if (!hasBuildDir) {
-    console.log('Building the application first...');
-    const buildProcess = spawn('next', ['build'], {
-      cwd: packageDir,
-      stdio: 'inherit',
-      shell: true
-    });
-    
-    await new Promise((resolve, reject) => {
-      buildProcess.on('close', (code) => {
-        if (code === 0) {
-          resolve(null);
-        } else {
-          reject(new Error(`Build process exited with code ${code}`));
-        }
-      });
-    });
-  }
-  
-  // Запускаем Next.js приложение
-  const appProcess = spawn(nextCommand, args, {
-    cwd: packageDir,
-    stdio: 'inherit',
-    shell: true
-  });
-  
-  // Ждем запуска сервера
-  await waitForServer(`http://localhost:${PORT}`);
-  
-  console.log(`\n✨ Code Consolidator UI is running at http://localhost:${PORT}`);
-  console.log('Use Ctrl+C to stop the application\n');
-  
-  // Обработка завершения процесса
-  appProcess.on('close', (code) => {
-    console.log(`Code Consolidator UI stopped with code ${code}`);
-    process.exit(code || 0);
-  });
-  
-  // Обработка сигналов завершения
-  process.on('SIGINT', () => {
-    console.log('\nStopping Code Consolidator UI...');
-    appProcess.kill('SIGINT');
-  });
-  
-  process.on('SIGTERM', () => {
-    console.log('\nStopping Code Consolidator UI...');
-    appProcess.kill('SIGTERM');
-  });
-}
 
 // Функция для ожидания запуска сервера
 async function waitForServer(url: string, maxRetries = 30, delay = 500): Promise<void> {
@@ -103,6 +44,63 @@ async function waitForServer(url: string, maxRetries = 30, delay = 500): Promise
   }
   
   throw new Error(`Server failed to start after ${maxRetries} retries`);
+}
+
+// Функция для запуска Next.js приложения
+async function startApp() {
+  console.log('Starting Code Consolidator UI...');
+  
+  // Запускаем сборку приложения
+  try {
+    const buildProcess = spawn(nextBinPath, ['build'], {
+      cwd: packageDir,
+      stdio: 'inherit',
+      shell: true
+    });
+    
+    await new Promise<void>((resolve, reject) => {
+      buildProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Build failed with code ${code}`));
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Failed to build the application:', error);
+    process.exit(1);
+  }
+  
+  // Запускаем Next.js в production режиме
+  const appProcess = spawn(nextBinPath, ['start', '--port', PORT.toString()], {
+    cwd: packageDir,
+    stdio: 'inherit',
+    shell: true
+  });
+  
+  // Ждем запуска сервера
+  await waitForServer(`http://localhost:${PORT}`);
+  
+  console.log(`\n✨ Code Consolidator UI is running at http://localhost:${PORT}`);
+  console.log('Use Ctrl+C to stop the application\n');
+  
+  // Обработка завершения процесса
+  appProcess.on('close', (code) => {
+    console.log(`Code Consolidator UI stopped with code ${code}`);
+    process.exit(code || 0);
+  });
+  
+  // Обработка сигналов завершения
+  process.on('SIGINT', () => {
+    console.log('\nStopping Code Consolidator UI...');
+    appProcess.kill('SIGINT');
+  });
+  
+  process.on('SIGTERM', () => {
+    console.log('\nStopping Code Consolidator UI...');
+    appProcess.kill('SIGTERM');
+  });
 }
 
 // Запускаем приложение

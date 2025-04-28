@@ -50,6 +50,9 @@ importers:
       '@teunlao/code-consolidator':
         specifier: workspace:*
         version: link:../library
+      '@teunlao/code-consolidator-web':
+        specifier: workspace:*
+        version: link:../web
 
   packages/web:
     dependencies:

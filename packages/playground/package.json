@@ -5,6 +5,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@teunlao/code-consolidator-web": "workspace:*",
     "@teunlao/code-consolidator": "workspace:*"
   }
 }
