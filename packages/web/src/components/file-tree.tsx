@@ -6,6 +6,7 @@ import type { FileNode } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { CodeViewer } from './code-viewer';
 
 interface FileTreeProps {
   data: FileNode;
@@ -15,6 +16,8 @@ interface FileTreeProps {
 
 export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [codeViewerOpen, setCodeViewerOpen] = useState<boolean>(false);
   
   // Константа для ограничения количества результатов поиска,
   // при котором папки будут автоматически раскрываться
@@ -214,6 +217,11 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
               handleSelectChange(node, !node.selected);
             }
           }}
+          onDoubleClick={() => {
+            if (node.type === 'file') {
+              handleDoubleClick(node);
+            }
+          }}
         >
           <div onClick={(e) => {
             e.stopPropagation(); // Останавливаем всплытие события от контейнера чекбокса
@@ -275,9 +283,24 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
     );
   };
 
+  // Функция для обработки двойного клика на файле
+  const handleDoubleClick = (node: FileNode) => {
+    if (node.type === 'file') {
+      setSelectedFile(node.path);
+      setCodeViewerOpen(true);
+    }
+  };
+
   return (
     <div className="overflow-y-auto max-h-[calc(100vh-250px)] border border-gray-700 rounded-md p-3 bg-gray-800/90">
       {renderNode(data, 0, true, [])}
+      
+      {/* Модальное окно для просмотра кода */}
+      <CodeViewer 
+        isOpen={codeViewerOpen} 
+        onClose={() => setCodeViewerOpen(false)} 
+        filePath={selectedFile} 
+      />
     </div>
   );
 }

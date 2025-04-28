@@ -33,12 +33,16 @@
   "bin": {
     "cc-start": "./dist/bin/start.js"
   },
+  "devDependencies": {
+    "@types/react-syntax-highlighter": "^15.5.0"
+  },
   "dependencies": {
     "zustand": "^5.0.3",
     "next": "^15.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwindcss": "^3.3.0",
+    "react-syntax-highlighter": "^15.5.0",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
