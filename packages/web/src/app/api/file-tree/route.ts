@@ -5,8 +5,9 @@ import path from 'path';
 // Маршрут GET для получения дерева файлов без настроек фильтрации
 export async function GET() {
   try {
-    // Получаем текущий рабочий каталог (проект пользователя)
-    const projectDir = process.cwd();
+    // Получаем каталог, откуда была запущена команда (проект пользователя)
+    // Используем переменную окружения, которую установит start.js
+    const projectDir = process.env.USER_PROJECT_DIR || process.cwd();
     
     // Строим дерево файлов без специальных настроек
     const fileTree = await buildFileTree(projectDir);
@@ -24,8 +25,8 @@ export async function POST(request: Request) {
     // Получаем настройки фильтрации из запроса
     const { filterSettings } = await request.json();
     
-    // Получаем текущий рабочий каталог (проект пользователя)
-    const projectDir = process.cwd();
+    // Получаем каталог, откуда была запущена команда (проект пользователя)
+    const projectDir = process.env.USER_PROJECT_DIR || process.cwd();
     
     // Строим дерево файлов с учетом настроек
     const fileTree = await buildFileTree(projectDir, filterSettings);

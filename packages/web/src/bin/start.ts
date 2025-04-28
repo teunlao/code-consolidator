@@ -58,14 +58,19 @@ async function startApp() {
   // Запускаем Next.js в production режиме напрямую из директории пакета
   console.log(`Starting server on port ${PORT}...`);
   
+  // Сохраняем директорию пользователя
+  const userProjectDir = process.cwd();
+  console.log(`User project directory: ${userProjectDir}`);
+  
   // Используем npx next start с путем к .next директории
   const appProcess = spawn('npx', ['next', 'start', '--port', PORT.toString()], {
-    cwd: packageDir, // Используем директорию пакета
+    cwd: packageDir, // Используем директорию пакета для запуска next
     stdio: 'inherit',
     shell: true,
     env: {
       ...process.env,
-      NODE_ENV: 'production' // Убедимся, что используется production режим
+      NODE_ENV: 'production', // Убедимся, что используется production режим
+      USER_PROJECT_DIR: userProjectDir // Передаем директорию пользователя как переменную окружения
     }
   });
   

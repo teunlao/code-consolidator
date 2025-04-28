@@ -21,10 +21,13 @@ export async function generatePdf({
       outputPath += '.pdf';
     }
     
+    // Используем директорию проекта пользователя из переменной окружения
+    const userProjectDir = process.env.USER_PROJECT_DIR || process.cwd();
+    
     // Получаем абсолютный путь для выходного файла
     const absoluteOutputPath = path.isAbsolute(outputPath) 
       ? outputPath 
-      : path.resolve(process.cwd(), outputPath);
+      : path.resolve(userProjectDir, outputPath);
     
     // Создаем конфигурацию и генерируем PDF
     const config = defineConsolidatorConfig({
