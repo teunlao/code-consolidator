@@ -8,8 +8,9 @@ import * as http from 'http';
 // Путь к директории пакета
 const packageDir = path.resolve(__dirname, '../..');
 
-// Путь к бинарной версии next из пакета
-const nextBinPath = path.join(packageDir, 'node_modules', '.bin', 'next');
+// Используем npx для запуска next - это гарантирует, что мы используем версию, 
+// установленную в нашем пакете, а не у пользователя
+const nextCommand = 'npx';
 
 // Порт для запуска приложения
 const PORT = process.env.PORT || 3333;
@@ -52,7 +53,9 @@ async function startApp() {
   
   // Запускаем сборку приложения
   try {
-    const buildProcess = spawn(nextBinPath, ['build'], {
+    console.log('Building the application...');
+    
+    const buildProcess = spawn(nextCommand, ['next', 'build'], {
       cwd: packageDir,
       stdio: 'inherit',
       shell: true
@@ -67,13 +70,17 @@ async function startApp() {
         }
       });
     });
+    
+    console.log('Build completed successfully.');
   } catch (error) {
     console.error('Failed to build the application:', error);
     process.exit(1);
   }
   
   // Запускаем Next.js в production режиме
-  const appProcess = spawn(nextBinPath, ['start', '--port', PORT.toString()], {
+  console.log(`Starting Next.js on port ${PORT}...`);
+  
+  const appProcess = spawn(nextCommand, ['next', 'start', '--port', PORT.toString()], {
     cwd: packageDir,
     stdio: 'inherit',
     shell: true

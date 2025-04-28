@@ -1,15 +1,43 @@
 {
   "name": "@teunlao/code-consolidator",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.4.0",
+  "private": false,
+  "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF documentation.",
+  "keywords": [
+    "code",
+    "documentation",
+    "pdf",
+    "consolidator",
+    "dark-theme",
+    "ui",
+    "viewer"
+  ],
+  "author": "teunlao (teunlao@gmail.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teunlao/code-consolidator.git",
+    "directory": "packages/web"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build && tsc -p tsconfig.bin.json",
     "start": "next start",
     "lint": "next lint",
     "build:bin": "tsc -p tsconfig.bin.json",
-    "prepare": "npm run build:bin"
+    "prepare": "npm run build:bin",
+    "publish-package": "npm run build && npm run build:bin && npm publish --access public"
   },
+  "files": [
+    "dist",
+    "src",
+    "next.config.js",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "tsconfig.json",
+    "tsconfig.bin.json",
+    "next-env.d.ts"
+  ],
   "bin": {
     "cc-start": "./dist/bin/start.js"
   },
@@ -32,17 +60,17 @@
     "lucide-react": "^0.290.0",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
-    "pdfkit": "0.15.0"
-  },
-  "devDependencies": {
+    "pdfkit": "0.15.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "typescript": "^5.2.2",
     "@types/node": "^20.8.10",
     "@types/pdfkit": "^0.13.4",
     "@types/react": "^18.2.35",
-    "@types/react-dom": "^18.2.14",
-    "autoprefixer": "^10.4.16",
+    "@types/react-dom": "^18.2.14"
+  },
+  "devDependencies": {
     "eslint": "^8.53.0",
-    "eslint-config-next": "^15.0.0",
-    "postcss": "^8.4.31",
-    "typescript": "^5.2.2"
+    "eslint-config-next": "^15.0.0"
   }
 }

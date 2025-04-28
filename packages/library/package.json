@@ -3,7 +3,7 @@
   "author": "teunlao (teunlao@gmail.com)",
   "license": "MIT",
   "sideEffects": false,
-  "version": "0.1.7",
+  "version": "0.2.0",
   "types": "dist/index.d.ts",
   "keywords": ["code", "llm", "generator"],
   "bin": {
