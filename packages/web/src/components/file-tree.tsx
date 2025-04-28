@@ -150,11 +150,42 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
     }, 0);
   };
 
+  // Функция для проверки, содержит ли директория выбранные файлы
+  const hasSelectedDescendants = (node: FileNode): boolean => {
+    if (node.type === 'file') {
+      return node.selected || false;
+    }
+    
+    if (node.children) {
+      return node.children.some(child => hasSelectedDescendants(child));
+    }
+    
+    return false;
+  };
+  
+  // Функция для подсчета количества выбранных файлов в директории
+  const countSelectedFiles = (node: FileNode): number => {
+    if (node.type === 'file') {
+      return node.selected ? 1 : 0;
+    }
+    
+    if (node.children) {
+      return node.children.reduce((acc, child) => acc + countSelectedFiles(child), 0);
+    }
+    
+    return 0;
+  };
+
   const renderNode = (node: FileNode, depth = 0, isLastChild = false, parentIsLast: boolean[] = []) => {
     const isExpanded = expanded[node.path];
     const hasChildren = Boolean(node.children && node.children.length > 0);
     // Рассчитываем размер для директорий
     const directorySize = node.type === 'directory' ? calculateDirectorySize(node) : undefined;
+    
+    // Проверяем, содержит ли директория выбранные файлы
+    const containsSelectedFiles = node.type === 'directory' && hasSelectedDescendants(node);
+    // Считаем количество выбранных файлов внутри папки
+    const selectedFilesCount = node.type === 'directory' ? countSelectedFiles(node) : 0;
 
     // Создаем индикаторы вложенности (вертикальные линии)
     const renderTreeLines = () => {
@@ -208,7 +239,12 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
         <div
           className={cn(
             'flex items-center py-1 hover:bg-gray-700/70 rounded-sm px-2 cursor-pointer z-10 relative transition-colors duration-200',
+            // Если элемент выбран напрямую
             node.selected && 'bg-blue-800/20 border-l-2 border-blue-400',
+            // Специальные стили для папок, содержащих выбранные файлы, но не раскрытых
+            !node.selected && !isExpanded && containsSelectedFiles && 'border-l-2 border-blue-400',
+            // Если папка не выбрана, но содержит выбранные файлы - добавляем тонкий синий индикатор слева
+            !node.selected && containsSelectedFiles && 'text-blue-100',
             depth === 0 && 'mt-1',
             node.type === 'directory' && 'font-medium',
             node.type === 'file' && node.selected && 'text-blue-100',
@@ -303,12 +339,25 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
           <span className="mr-2 text-sm text-gray-200">{node.name}</span>
 
           {/* Отображаем размер для файлов и папок */}
-          {node.type === 'file' && node.size !== undefined && (
-            <span className="text-xs text-gray-400 ml-auto">{formatFileSize(node.size)}</span>
-          )}
-          {node.type === 'directory' && directorySize !== undefined && directorySize > 0 && (
-            <span className="text-xs text-gray-400 ml-auto">{formatFileSize(directorySize)}</span>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Показываем количество выбранных файлов для папок, если есть выбранные */}
+            {node.type === 'directory' && selectedFilesCount > 0 && (
+              <span className={cn(
+                "text-xs px-1.5 py-0.5 rounded-full",
+                isExpanded ? "bg-blue-800/30 text-blue-300" : "bg-blue-600/50 text-blue-100"
+              )}>
+                {selectedFilesCount}
+              </span>
+            )}
+            
+            {/* Размер файла или папки */}
+            {node.type === 'file' && node.size !== undefined && (
+              <span className="text-xs text-gray-400">{formatFileSize(node.size)}</span>
+            )}
+            {node.type === 'directory' && directorySize !== undefined && directorySize > 0 && (
+              <span className="text-xs text-gray-400">{formatFileSize(directorySize)}</span>
+            )}
+          </div>
         </div>
 
         {node.type === 'directory' && isExpanded && node.children && node.children.length > 0 && (
