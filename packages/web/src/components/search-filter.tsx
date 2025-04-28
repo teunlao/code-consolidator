@@ -131,7 +131,7 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
   // Функция для прокрутки списка к выбранному предложению
   const scrollToSuggestion = (index: number) => {
     if (suggestionsRef.current && suggestionsRef.current.children[index]) {
-      const element = suggestionsRef.current.children[index];
+      const element = suggestionsRef.current.children[index] as HTMLElement;
       const container = suggestionsRef.current;
       
       // Проверяем, нужна ли прокрутка
