@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Импорт стилей автодополнения */
+/* biome-ignore lint/correctness/noInvalidPositionAtImportRule: <explanation> */
+/* @import '../styles/autocomplete.css'; */
 
 @layer base {
   :root {
@@ -75,7 +78,9 @@
   }
 }
 
-/* Дополнительные стили для улучшения непрозрачности в приложении */
+
+
+/* Приоритетные стили для списков и выпадающих меню */
 .dropdown-menu,
 [role="listbox"],
 .suggestions-list,
@@ -83,6 +88,7 @@
   background-color: #1e2030 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  z-index: 9999 !important;
 }
 
 /* Улучшенные стили для выпадающих списков */

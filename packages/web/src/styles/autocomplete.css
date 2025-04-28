@@ -1,0 +1,24 @@
+/* Стили для автодополнения */
+.autocomplete-dropdown {
+  background-color: #1e2030 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.9) !important;
+  z-index: 9999 !important;
+  border: 1px solid #374151 !important;
+}
+
+.autocomplete-item {
+  background-color: #1e2030 !important;
+}
+
+.autocomplete-item-active {
+  background-color: #2563eb !important;
+}
+
+/* Предотвращение прозрачности во всех контекстах */
+[role="listbox"],
+[role="combobox"],
+.suggestions-list {
+  background-color: #1e2030 !important;
+}

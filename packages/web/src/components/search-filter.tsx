@@ -1,18 +1,14 @@
-"use client"
+'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, X, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronUp, Info, Search, X } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { FilterSettings } from '@/server/file-system';
+import type { FilterSettings } from '@/server/file-system';
 
 interface SearchFilterProps {
   onSearch: (pattern: string) => void;
@@ -34,10 +30,10 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
       setSuggestions([]);
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // Если есть настройки фильтрации, используем POST запрос
       if (filterSettings) {
         const response = await fetch('/api/file-autocomplete', {
@@ -47,12 +43,12 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
           },
           body: JSON.stringify({
             query,
-            filterSettings
+            filterSettings,
           }),
         });
-        
+
         const data = await response.json();
-        
+
         if (data.suggestions) {
           setSuggestions(data.suggestions);
         }
@@ -60,7 +56,7 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
         // Иначе используем GET запрос без фильтрации
         const response = await fetch(`/api/file-autocomplete?query=${encodeURIComponent(query)}`);
         const data = await response.json();
-        
+
         if (data.suggestions) {
           setSuggestions(data.suggestions);
         }
@@ -77,10 +73,10 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchValue(value);
-    
+
     // Сбросить фокусированное предложение при изменении ввода
     setFocusedSuggestion(-1);
-    
+
     // Показать список предложений
     if (value.length >= 2) {
       setShowSuggestions(true);
@@ -100,28 +96,33 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
     onSearch(fileName);
   };
 
-  // Обработчик клавиатурной навигации
+  // Обработчик клавиатурной навигации - оптимизированная версия
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Навигация по стрелкам вверх/вниз
     if (showSuggestions && suggestions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
+        // Перемещение вниз по списку
         setFocusedSuggestion(prev => {
           const next = prev + 1 >= suggestions.length ? 0 : prev + 1;
-          scrollToSuggestion(next);
+          // Устанавливаем таймаут для скролла, чтобы дать React время для обновления состояния
+          setTimeout(() => scrollToSuggestion(next), 0);
           return next;
         });
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        // Перемещение вверх по списку
         setFocusedSuggestion(prev => {
           const next = prev - 1 < 0 ? suggestions.length - 1 : prev - 1;
-          scrollToSuggestion(next);
+          setTimeout(() => scrollToSuggestion(next), 0);
           return next;
         });
       } else if (e.key === 'Enter' && focusedSuggestion >= 0) {
         e.preventDefault();
+        // Выбор текущего предложения
         handleSelectSuggestion(suggestions[focusedSuggestion]);
       } else if (e.key === 'Escape') {
+        e.preventDefault();
         setShowSuggestions(false);
       }
     }
@@ -130,10 +131,23 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
   // Функция для прокрутки списка к выбранному предложению
   const scrollToSuggestion = (index: number) => {
     if (suggestionsRef.current && suggestionsRef.current.children[index]) {
-      suggestionsRef.current.children[index].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
+      const element = suggestionsRef.current.children[index];
+      const container = suggestionsRef.current;
+      
+      // Проверяем, нужна ли прокрутка
+      const elementTop = element.offsetTop;
+      const elementBottom = elementTop + element.clientHeight;
+      const containerTop = container.scrollTop;
+      const containerBottom = containerTop + container.clientHeight;
+      
+      // Если элемент выше видимой области, прокручиваем вверх
+      if (elementTop < containerTop) {
+        container.scrollTop = elementTop;
+      }
+      // Если элемент ниже видимой области, прокручиваем вниз
+      else if (elementBottom > containerBottom) {
+        container.scrollTop = elementBottom - container.clientHeight;
+      }
     }
   };
 
@@ -141,9 +155,9 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
-        inputRef.current && 
-        !inputRef.current.contains(e.target as Node) && 
-        suggestionsRef.current && 
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node) &&
+        suggestionsRef.current &&
         !suggestionsRef.current.contains(e.target as Node)
       ) {
         setShowSuggestions(false);
@@ -173,17 +187,25 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
   };
 
   // Отображение последнего сегмента пути (имя файла или папки)
-  const formatSuggestion = (path: string) => {
+  const formatSuggestion = (path: string, index: number) => {
     const segments = path.split('/');
     const lastSegment = segments.pop() || path;
     const parentPath = segments.length > 0 ? segments.join('/') : '';
-    
+    const isSelected = index === focusedSuggestion;
+
     return (
-      <div className="flex items-center w-full">
+      <div className="flex flex-col w-full">
         <span className="font-medium">{lastSegment}</span>
         {parentPath && (
-          <span className="text-gray-500 text-xs ml-2 truncate">
-            ({parentPath})
+          <span 
+            className={`text-xs truncate ${
+              isSelected ? 'text-blue-100' : 'text-gray-500'
+            }`}
+            style={{ 
+              opacity: isSelected ? 0.9 : 0.7 
+            }}
+          >
+            {parentPath}
           </span>
         )}
       </div>
@@ -207,7 +229,8 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
               fetchSuggestions(searchValue);
             }
           }}
-          className="pl-9 pr-9 bg-gray-800 border-gray-700 text-gray-200 focus:ring-blue-500 focus:border-blue-500"
+          className="pl-9 pr-9 border-gray-700 text-gray-200 focus:ring-blue-500 focus:border-blue-500"
+          style={{ backgroundColor: '#1f2937' }}
         />
         {searchValue && (
           <button
@@ -218,59 +241,44 @@ export function SearchFilter({ onSearch, filterSettings }: SearchFilterProps) {
             <X className="h-4 w-4" />
           </button>
         )}
-        
-        {/* Иконка с подсказкой о функции автоматического раскрытия */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="absolute right-12 top-2.5 text-gray-400 hover:text-gray-200"
-                onClick={(e) => e.preventDefault()}
-              >
-                <Info className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>При поиске папки будут автоматически раскрыты, если количество найденных файлов не превышает 10.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
+
+        {/* Иконка информации удалена */}
+
         {/* Выпадающий список предложений */}
         {showSuggestions && (
-          <div 
+          <div
             ref={suggestionsRef}
-            className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-md bg-gray-800 border border-gray-700 shadow-lg py-1"
+            className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border border-gray-700 shadow-lg py-1 autocomplete-dropdown"
+            style={{
+              backgroundColor: '#1e2030',
+            }}
           >
             {isLoading ? (
               <div className="px-4 py-2 text-sm text-gray-400">Загрузка...</div>
             ) : suggestions.length > 0 ? (
               suggestions.map((suggestion, index) => (
+                // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
                 <div
                   key={suggestion}
                   onClick={() => handleSelectSuggestion(suggestion)}
-                  className={cn(
-                    "px-4 py-2 text-sm cursor-pointer hover:bg-gray-700",
-                    focusedSuggestion === index ? "bg-gray-700" : ""
-                  )}
+                  style={{
+                    backgroundColor: focusedSuggestion === index ? '#2563eb' : '#1e2030',
+                    position: 'relative',
+                  }}
+                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-800 ${
+                    focusedSuggestion === index ? 'text-white' : 'text-gray-200'
+                  }`}
                 >
-                  {formatSuggestion(suggestion)}
+                  {formatSuggestion(suggestion, index)}
                 </div>
               ))
             ) : (
-              searchValue.length >= 2 && (
-                <div className="px-4 py-2 text-sm text-gray-400">Нет результатов</div>
-              )
+              searchValue.length >= 2 && <div className="px-4 py-2 text-sm text-gray-400">Нет результатов</div>
             )}
           </div>
         )}
       </div>
-      <Button 
-        type="submit" 
-        size="sm"
-        className="bg-blue-600 hover:bg-blue-700 text-white"
-      >
+      <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
         Найти
       </Button>
     </form>
