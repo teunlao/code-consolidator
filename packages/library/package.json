@@ -1,15 +1,11 @@
 {
-  "name": "@teunlao/code-consolidator",
+  "name": "@teunlao/code-consolidator-lib",
   "author": "teunlao (teunlao@gmail.com)",
   "license": "MIT",
   "sideEffects": false,
   "version": "0.1.7",
   "types": "dist/index.d.ts",
-  "keywords": [
-    "code",
-    "llm",
-    "generator"
-  ],
+  "keywords": ["code", "llm", "generator"],
   "bin": {
     "cc-gen": "dist/bin/generator.js"
   },
@@ -18,10 +14,7 @@
     "url": "git+https://github.com/teunlao/code-consolidator.git",
     "directory": "packages/library"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src", "dist/bin"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -30,7 +23,8 @@
     }
   },
   "scripts": {
-    "build": "tsup --publicDir assets"
+    "build": "tsup --publicDir assets",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@types/pdfkit": "0.13.4",
