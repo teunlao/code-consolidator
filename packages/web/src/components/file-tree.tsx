@@ -32,30 +32,47 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
 
     return (
       <div key={node.path}>
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
         <div
           className={cn(
-            'flex items-center py-1 hover:bg-gray-700 rounded px-2',
+            'flex items-center py-1 hover:bg-gray-700 rounded px-2 cursor-pointer',
             node.selected && 'bg-blue-900/30',
           )}
           style={{ paddingLeft: `${depth * 16}px` }}
+          onClick={(e) => {
+            // Предотвращаем всплытие события, если клик был на чекбоксе
+            if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('[role="checkbox"]')) {
+              return;
+            }
+
+            // Если клик на папке - разворачиваем/сворачиваем
+            if (node.type === 'directory') {
+              toggleExpand(node.path);
+            }
+            // Если клик на файле - меняем состояние чекбокса
+            else if (node.type === 'file') {
+              handleSelectChange(node, !node.selected);
+            }
+          }}
         >
           <Checkbox
             id={node.path}
             checked={node.selected}
             onCheckedChange={(checked: boolean | 'indeterminate') => handleSelectChange(node, checked === true)}
             className="mr-2"
+            // Останавливаем всплытие события при клике на чекбокс
+            onClick={(e) => e.stopPropagation()}
           />
 
           {node.type === 'directory' && (
-            <button type="button" onClick={() => toggleExpand(node.path)} className="mr-2 focus:outline-none">
+            <div className="mr-2 flex items-center justify-center w-4 h-4">
               {hasChildren &&
                 (isExpanded ? (
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 ) : (
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                 ))}
-              {!hasChildren && <div className="w-4" />}
-            </button>
+            </div>
           )}
 
           {node.type === 'directory' ? (
@@ -78,5 +95,9 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
     );
   };
 
-  return <div className="overflow-y-auto max-h-[calc(100vh-250px)] border border-gray-700 rounded-md p-2 bg-gray-800">{renderNode(data)}</div>;
+  return (
+    <div className="overflow-y-auto max-h-[calc(100vh-250px)] border border-gray-700 rounded-md p-2 bg-gray-800">
+      {renderNode(data)}
+    </div>
+  );
 }

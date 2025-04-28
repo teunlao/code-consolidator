@@ -58,6 +58,21 @@ const DEFAULT_IGNORED_EXTENSIONS = [
 
 export function FilterSettingsButton({ settings, onSettingsChange }: FilterSettingsProps) {
   const [open, setOpen] = useState(false);
+  // Создаем локальную копию настроек, которая будет обновляться внутри диалога
+  const [localSettings, setLocalSettings] = useState<FilterSettings>({ ...settings });
+  
+  // Сбрасываем локальные настройки при открытии диалога
+  React.useEffect(() => {
+    if (open) {
+      setLocalSettings({ ...settings });
+    }
+  }, [open, settings]);
+  
+  // Функция для сохранения настроек
+  const handleSave = () => {
+    onSettingsChange(localSettings);
+    setOpen(false);
+  };
 
   return (
     <>
@@ -93,10 +108,10 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                   <Label htmlFor="use-default-ignores" className="text-gray-200">Использовать стандартные игнорируемые директории</Label>
                   <Switch
                     id="use-default-ignores"
-                    checked={settings.useDefaultIgnores}
+                    checked={localSettings.useDefaultIgnores}
                     onCheckedChange={(checked) => {
-                      onSettingsChange({
-                        ...settings,
+                      setLocalSettings({
+                        ...localSettings,
                         useDefaultIgnores: checked,
                       });
                     }}
@@ -104,7 +119,7 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                   />
                 </div>
 
-                {settings.useDefaultIgnores && (
+                {localSettings.useDefaultIgnores && (
                   <div className="mb-4">
                     <Label className="text-sm text-gray-400">Стандартные игнорируемые директории:</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -120,8 +135,8 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                 <div>
                   <Label className="text-gray-200">Дополнительные игнорируемые директории:</Label>
                   <EditableList
-                    items={settings.ignoredDirectories}
-                    onItemsChange={(items) => onSettingsChange({ ...settings, ignoredDirectories: items })}
+                    items={localSettings.ignoredDirectories}
+                    onItemsChange={(items) => setLocalSettings({ ...localSettings, ignoredDirectories: items })}
                     placeholder="Введите имя директории..."
                     badgeVariant="secondary"
                   />
@@ -131,8 +146,8 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
               <TabsContent value="files" className="mt-4 space-y-4">
                 <Label className="text-gray-200">Игнорируемые файлы (можно использовать * как шаблон):</Label>
                 <EditableList
-                  items={settings.ignoredFiles}
-                  onItemsChange={(items) => onSettingsChange({ ...settings, ignoredFiles: items })}
+                  items={localSettings.ignoredFiles}
+                  onItemsChange={(items) => setLocalSettings({ ...localSettings, ignoredFiles: items })}
                   placeholder="Введите имя файла или шаблон..."
                   badgeVariant="destructive"
                 />
@@ -142,8 +157,8 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                 <div>
                   <Label className="text-gray-200">Игнорируемые расширения файлов:</Label>
                   <EditableList
-                    items={settings.ignoredExtensions}
-                    onItemsChange={(items) => onSettingsChange({ ...settings, ignoredExtensions: items })}
+                    items={localSettings.ignoredExtensions}
+                    onItemsChange={(items) => setLocalSettings({ ...localSettings, ignoredExtensions: items })}
                     placeholder="Введите расширение (с точкой, например .js)..."
                     validateItem={(item) => item.startsWith('.')}
                     errorMessage="Расширение должно начинаться с точки (например .js)"
@@ -157,8 +172,8 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                     Если указано хотя бы одно расширение, будут включены только файлы с этими расширениями
                   </p>
                   <EditableList
-                    items={settings.allowedExtensions}
-                    onItemsChange={(items) => onSettingsChange({ ...settings, allowedExtensions: items })}
+                    items={localSettings.allowedExtensions}
+                    onItemsChange={(items) => setLocalSettings({ ...localSettings, allowedExtensions: items })}
                     placeholder="Введите расширение (с точкой, например .js)..."
                     validateItem={(item) => item.startsWith('.')}
                     errorMessage="Расширение должно начинаться с точки (например .js)"
@@ -170,7 +185,7 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setOpen(false)} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
               Сохранить
             </Button>
           </DialogFooter>
