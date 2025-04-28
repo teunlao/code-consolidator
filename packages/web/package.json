@@ -28,12 +28,7 @@
     "prepare": "next build && pnpm run build:bin",
     "publish-package": "pnpm run prepare && pnpm publish --access public"
   },
-  "files": [
-    "dist",
-    ".next",
-    "next.config.js",
-    "package.json"
-  ],
+  "files": ["dist", ".next", "next.config.js", "package.json"],
   "bin": {
     "cc-start": "./dist/bin/start.js"
   },
@@ -63,10 +58,8 @@
     "@types/node": "^20.8.10",
     "@types/pdfkit": "^0.13.4",
     "@types/react": "^18.2.35",
-    "@types/react-dom": "^18.2.14"
-  },
-  "devDependencies": {
-    "eslint": "^8.53.0",
-    "eslint-config-next": "^15.0.0"
+    "@types/react-dom": "^18.2.14",
+    "uuid": "^9.0.1",
+    "@types/uuid": "^9.0.7"
   }
 }

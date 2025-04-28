@@ -1,49 +1,43 @@
-"use client"
+'use client';
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface EditableListProps {
   items: string[];
   onItemsChange: (items: string[]) => void;
   placeholder?: string;
+  badgeVariant?: 'default' | 'secondary' | 'destructive';
   validateItem?: (item: string) => boolean;
   errorMessage?: string;
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
 }
 
 export function EditableList({
   items,
   onItemsChange,
-  placeholder = "Добавить новый элемент...",
-  validateItem = () => true,
-  errorMessage = "Неверный формат",
-  badgeVariant = "default"
+  placeholder = 'Add item...',
+  badgeVariant = 'default',
+  validateItem,
+  errorMessage = 'Invalid input',
 }: EditableListProps) {
-  const [inputValue, setInputValue] = useState('');
-  const [error, setError] = useState('');
+  const [newItem, setNewItem] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleAddItem = () => {
-    const value = inputValue.trim();
-    if (!value) return;
+    if (!newItem.trim()) {
+      return;
+    }
 
-    if (!validateItem(value)) {
+    if (validateItem && !validateItem(newItem)) {
       setError(errorMessage);
       return;
     }
 
-    // Проверка на дубликаты
-    if (items.includes(value)) {
-      setError('Этот элемент уже добавлен');
-      return;
-    }
-
-    onItemsChange([...items, value]);
-    setInputValue('');
-    setError('');
+    setError(null);
+    onItemsChange([...items, newItem.trim()]);
+    setNewItem('');
   };
 
   const handleRemoveItem = (index: number) => {
@@ -52,61 +46,73 @@ export function EditableList({
     onItemsChange(newItems);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAddItem();
     }
   };
 
+  const getBadgeClass = () => {
+    switch (badgeVariant) {
+      case 'secondary':
+        return 'bg-gray-700 text-gray-200 hover:bg-gray-600';
+      case 'destructive':
+        return 'bg-red-900/40 text-red-300 hover:bg-red-900/60';
+      default:
+        return 'bg-blue-900/40 text-blue-300 hover:bg-blue-900/60';
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
+    <div>
+      <div className="flex flex-wrap gap-2 mt-2 mb-3">
+        {items.map((item, index) => (
+          <div
+            key={index}
+            className={`inline-flex items-center rounded px-2 py-1 text-xs ${getBadgeClass()}`}
+          >
+            {item}
+            <button
+              type="button"
+              onClick={() => handleRemoveItem(index)}
+              className="ml-2 text-gray-400 hover:text-gray-200"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        {items.length === 0 && (
+          <div className="text-sm text-gray-500 italic">Список пуст</div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
         <Input
-          value={inputValue}
+          value={newItem}
           onChange={(e) => {
-            setInputValue(e.target.value);
-            setError('');
+            setNewItem(e.target.value);
+            if (error) {
+              setError(null);
+            }
           }}
+          onKeyDown={handleKeyPress}
           placeholder={placeholder}
-          onKeyDown={handleKeyDown}
-          className="flex-1 bg-gray-700 border-gray-600 text-gray-200 focus:ring-blue-500 focus:border-blue-500"
+          className="border-gray-700 bg-gray-700 text-gray-200 placeholder:text-gray-500"
         />
         <Button
           type="button"
           onClick={handleAddItem}
-          size="sm"
+          disabled={!newItem.trim()}
           variant="outline"
+          size="icon"
           className="bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
         >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      
-      {error && (
-        <p className="text-sm text-red-400 mt-1">{error}</p>
-      )}
-      
-      {items.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {items.map((item, index) => (
-            <Badge 
-              key={index} 
-              variant={badgeVariant}
-              className="flex items-center gap-1 px-2 py-1"
-            >
-              <span>{item}</span>
-              <button 
-                type="button" 
-                onClick={() => handleRemoveItem(index)}
-                className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
+
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
   );
 }

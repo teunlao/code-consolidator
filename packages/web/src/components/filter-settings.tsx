@@ -8,14 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Settings } from 'lucide-react';
-
-interface FilterSettings {
-  ignoredDirectories: string[];
-  ignoredFiles: string[];
-  ignoredExtensions: string[];
-  allowedExtensions: string[];
-  useDefaultIgnores: boolean;
-}
+import { FilterSettings } from '@/lib/types';
 
 interface FilterSettingsProps {
   settings: FilterSettings;

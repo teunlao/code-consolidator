@@ -7,122 +7,66 @@ import { SearchFilter } from '@/components/search-filter';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Check, Loader2, RotateCcw } from 'lucide-react';
-import { FileNode } from '@/lib/types';
+import { FileNode, FilterSettings } from '@/lib/types';
 import { FilterSettingsButton } from '@/components/filter-settings';
-import { getCookie, setCookie } from '@/lib/utils';
-
-// Ключи для cookie
-const COOKIE_KEYS = {
-  INCLUDE_COMMENTS: 'code-consolidator-include-comments',
-  NEW_PAGE_FOR_EACH_FILE: 'code-consolidator-new-page-for-each-file',
-  OUTPUT_FILE_NAME: 'code-consolidator-output-file-name',
-  FILTER_SETTINGS: 'code-consolidator-filter-settings',
-};
-
-// Интерфейс для настроек фильтрации
-interface FilterSettings {
-  ignoredDirectories: string[];
-  ignoredFiles: string[];
-  ignoredExtensions: string[];
-  allowedExtensions: string[];
-  useDefaultIgnores: boolean;
-}
-
-// Дефолтные настройки фильтрации
-const DEFAULT_FILTER_SETTINGS: FilterSettings = {
-  ignoredDirectories: [],
-  ignoredFiles: [],
-  ignoredExtensions: [],
-  allowedExtensions: [],
-  useDefaultIgnores: true,
-};
+import { ProjectSelector } from '@/components/project-manager';
+import { ProjectInfo } from '@/components/project-info';
+import { useProjects } from '@/lib/use-projects';
+import { getSelectedFilePaths, updateNodeSelection, countSelectedFiles } from '@/lib/tree-utils';
+import { applySelectedFilesToTree } from '@/lib/projects-storage';
 
 export default function Home() {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [includeComments, setIncludeComments] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = getCookie(COOKIE_KEYS.INCLUDE_COMMENTS);
-      return saved ? JSON.parse(saved) : true;
-    }
-    return true;
-  });
-  const [newPageForEachFile, setNewPageForEachFile] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = getCookie(COOKIE_KEYS.NEW_PAGE_FOR_EACH_FILE);
-      return saved ? JSON.parse(saved) : true;
-    }
-    return true;
-  });
-  const [outputFileName, setOutputFileName] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = getCookie(COOKIE_KEYS.OUTPUT_FILE_NAME);
-      return saved || 'project_code.pdf';
-    }
-    return 'project_code.pdf';
-  });
   const [generating, setGenerating] = useState(false);
   const [generatedPdfPath, setGeneratedPdfPath] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [selectedFilesCount, setSelectedFilesCount] = useState(0);
   
-  // Состояние для настроек фильтрации
-  const [filterSettings, setFilterSettings] = useState<FilterSettings>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = getCookie(COOKIE_KEYS.FILTER_SETTINGS);
-      return saved ? JSON.parse(saved) : DEFAULT_FILTER_SETTINGS;
+  // Используем хук для проектов и профилей
+  const { 
+    activeSettings, 
+    activeProject, 
+    activeProfile,
+    updateActiveSettings, 
+    isLoaded
+  } = useProjects();
+  
+  // Загрузка дерева файлов при инициализации или изменении настроек фильтрации
+  useEffect(() => {
+    if (isLoaded) {
+      fetchFileTree(activeSettings.filterSettings);
     }
-    return DEFAULT_FILTER_SETTINGS;
-  });
-  
-  // Загрузка дерева файлов
-  useEffect(() => {
-    fetchFileTree();
-  }, []);
-  
-  // Повторная загрузка дерева файлов при изменении настроек фильтрации
-  useEffect(() => {
-    fetchFileTree(filterSettings);
-  }, [filterSettings]);
+  }, [isLoaded, activeSettings.filterSettings, activeProject?.id, activeProfile?.id]);
   
   // Функция для загрузки дерева файлов
-  async function fetchFileTree(settings?: FilterSettings) {
+  async function fetchFileTree(filterSettings: FilterSettings) {
     try {
       setLoading(true);
       
-      // Если настройки не указаны, проверяем, есть ли они в куках
-      if (!settings && typeof window !== 'undefined') {
-        const savedSettings = getCookie(COOKIE_KEYS.FILTER_SETTINGS);
-        if (savedSettings) {
-          settings = JSON.parse(savedSettings);
-        }
-      }
-      
-      let response;
-      if (settings) {
-        // Если есть настройки, отправляем их через POST
-        response = await fetch('/api/file-tree', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filterSettings: settings
-          }),
-        });
-        
-        // Обновляем состояние filterSettings в компоненте
-        setFilterSettings(settings);
-      } else {
-        // Иначе используем GET без параметров
-        response = await fetch('/api/file-tree');
-      }
+      let response = await fetch('/api/file-tree', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filterSettings
+        }),
+      });
       
       const data = await response.json();
       
       if (data.fileTree) {
-        setFileTree(data.fileTree);
+        // Применяем сохраненные выбранные файлы к полученному дереву
+        const treeWithSelection = activeSettings.selectedFiles.length > 0
+          ? applySelectedFilesToTree(data.fileTree, activeSettings.selectedFiles)
+          : data.fileTree;
+        
+        setFileTree(treeWithSelection);
+        
+        // Обновляем счетчик выбранных файлов
+        setSelectedFilesCount(countSelectedFiles(treeWithSelection));
       }
     } catch (error) {
       console.error('Error fetching file tree:', error);
@@ -131,112 +75,42 @@ export default function Home() {
     }
   }
   
-  // Сохраняем настройки в куки при их изменении
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCookie(COOKIE_KEYS.INCLUDE_COMMENTS, JSON.stringify(includeComments));
-    }
-  }, [includeComments]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCookie(COOKIE_KEYS.NEW_PAGE_FOR_EACH_FILE, JSON.stringify(newPageForEachFile));
-    }
-  }, [newPageForEachFile]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCookie(COOKIE_KEYS.OUTPUT_FILE_NAME, outputFileName);
-    }
-  }, [outputFileName]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCookie(COOKIE_KEYS.FILTER_SETTINGS, JSON.stringify(filterSettings));
-      
-      // Важно: перезагружаем дерево файлов при изменении настроек фильтрации
-      fetchFileTree(filterSettings);
-    }
-  }, [filterSettings]);
-
-  // Функция для обновления настроек фильтрации
-  const handleFilterSettingsChange = (newSettings: FilterSettings) => {
-    setFilterSettings(newSettings);
-  };
-  
   // Функция для сброса всех настроек до дефолтных значений
   const resetAllSettings = () => {
-    // Сбрасываем состояния
-    setIncludeComments(true);
-    setNewPageForEachFile(true);
-    setOutputFileName('project_code.pdf');
-    setFilterSettings(DEFAULT_FILTER_SETTINGS);
+    const defaultFilterSettings: FilterSettings = {
+      ignoredDirectories: [],
+      ignoredFiles: [],
+      ignoredExtensions: [],
+      allowedExtensions: [],
+      useDefaultIgnores: true,
+    };
+
+    updateActiveSettings({
+      includeComments: true,
+      newPageForEachFile: true,
+      outputFileName: 'project_code.pdf',
+      filterSettings: defaultFilterSettings,
+      selectedFiles: []
+    });
     
-    // Сбрасываем куки (если мы в браузере)
-    if (typeof window !== 'undefined') {
-      setCookie(COOKIE_KEYS.INCLUDE_COMMENTS, JSON.stringify(true));
-      setCookie(COOKIE_KEYS.NEW_PAGE_FOR_EACH_FILE, JSON.stringify(true));
-      setCookie(COOKIE_KEYS.OUTPUT_FILE_NAME, 'project_code.pdf');
-      setCookie(COOKIE_KEYS.FILTER_SETTINGS, JSON.stringify(DEFAULT_FILTER_SETTINGS));
-      
-      // Перезагружаем дерево файлов с новыми настройками
-      fetchFileTree(DEFAULT_FILTER_SETTINGS);
-    }
+    // Перезагружаем дерево файлов с новыми настройками
+    fetchFileTree(defaultFilterSettings);
   };
   
   // Функция для обновления выбранных файлов в дереве
   const handleSelectNode = (path: string, selected: boolean) => {
     if (!fileTree) return;
     
-    const updateNodeSelection = (node: FileNode): FileNode => {
-      if (node.path === path) {
-        // Если это директория, обновляем все дочерние элементы
-        if (node.type === 'directory' && node.children) {
-          return {
-            ...node,
-            selected,
-            children: node.children.map(child => ({
-              ...child,
-              selected,
-              children: child.children 
-                ? child.children.map(grandchild => updateNodeSelection({ 
-                    ...grandchild, 
-                    selected 
-                  }))
-                : undefined
-            }))
-          };
-        }
-        
-        // Если это файл, просто обновляем его статус
-        return { ...node, selected };
-      }
-      
-      // Если это не искомый узел, но у него есть дети
-      if (node.children) {
-        return {
-          ...node,
-          children: node.children.map(child => updateNodeSelection(child))
-        };
-      }
-      
-      return node;
-    };
-    
-    const updatedTree = updateNodeSelection(fileTree);
+    const updatedTree = updateNodeSelection(fileTree, path, selected);
     setFileTree(updatedTree);
     
-    // Обновляем счетчик выбранных файлов
-    const countSelectedFiles = (node: FileNode): number => {
-      let count = node.type === 'file' && node.selected ? 1 : 0;
-      
-      if (node.children) {
-        count += node.children.reduce((acc, child) => acc + countSelectedFiles(child), 0);
-      }
-      
-      return count;
-    };
+    // Получаем и сохраняем выбранные файлы
+    const selectedFiles = getSelectedFilePaths(updatedTree);
+    updateActiveSettings({
+      selectedFiles
+    });
     
+    // Обновляем счетчик выбранных файлов
     setSelectedFilesCount(countSelectedFiles(updatedTree));
   };
   
@@ -245,23 +119,6 @@ export default function Home() {
     if (!fileTree) return;
     
     setGenerating(true);
-    
-    // Получаем список всех выбранных файлов
-    const getSelectedFilePaths = (node: FileNode): string[] => {
-      let paths: string[] = [];
-      
-      if (node.type === 'file' && node.selected) {
-        paths.push(node.path);
-      }
-      
-      if (node.children) {
-        node.children.forEach(child => {
-          paths = [...paths, ...getSelectedFilePaths(child)];
-        });
-      }
-      
-      return paths;
-    };
     
     const selectedFiles = getSelectedFilePaths(fileTree);
     
@@ -273,9 +130,9 @@ export default function Home() {
         },
         body: JSON.stringify({
           files: selectedFiles,
-          outputFile: outputFileName,
-          includeComments,
-          newPageForEachFile,
+          outputFile: activeSettings.outputFileName,
+          includeComments: activeSettings.includeComments,
+          newPageForEachFile: activeSettings.newPageForEachFile,
         }),
       });
       
@@ -337,6 +194,12 @@ export default function Home() {
     <main className="container mx-auto py-8 px-4 bg-gray-900">
       <h1 className="text-2xl font-bold mb-6 text-gray-100">Code Consolidator</h1>
       
+      {/* Селектор проектов и профилей */}
+      <ProjectSelector />
+      
+      {/* Информация о текущем проекте/профиле */}
+      <ProjectInfo />
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-4">
           <SearchFilter onSearch={handleSearch} />
@@ -372,19 +235,27 @@ export default function Home() {
             {/* Кнопка настройки фильтрации */}
             <div className="w-full">
               <FilterSettingsButton 
-                settings={filterSettings}
-                onSettingsChange={handleFilterSettingsChange}
+                settings={activeSettings.filterSettings}
+                onSettingsChange={(newFilterSettings) => 
+                  updateActiveSettings({ filterSettings: newFilterSettings })
+                }
               />
             </div>
           </div>
           
           <ConfigPanel 
-            includeComments={includeComments}
-            onIncludeCommentsChange={setIncludeComments}
-            newPageForEachFile={newPageForEachFile}
-            onNewPageForEachFileChange={setNewPageForEachFile}
-            outputFileName={outputFileName}
-            onOutputFileNameChange={setOutputFileName}
+            includeComments={activeSettings.includeComments}
+            onIncludeCommentsChange={(value) => 
+              updateActiveSettings({ includeComments: value })
+            }
+            newPageForEachFile={activeSettings.newPageForEachFile}
+            onNewPageForEachFileChange={(value) => 
+              updateActiveSettings({ newPageForEachFile: value })
+            }
+            outputFileName={activeSettings.outputFileName}
+            onOutputFileNameChange={(value) => 
+              updateActiveSettings({ outputFileName: value })
+            }
             onGenerate={handleGeneratePdf}
             selectedFilesCount={selectedFilesCount}
           />

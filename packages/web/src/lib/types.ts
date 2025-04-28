@@ -1,14 +1,14 @@
-// Типы данных, используемые как на клиенте, так и на сервере
-
+// Типы для файлового дерева
 export interface FileNode {
   name: string;
   path: string;
   type: 'file' | 'directory';
-  children?: FileNode[];
   size?: number;
-  selected: boolean;
+  selected?: boolean;
+  children?: FileNode[];
 }
 
+// Типы для фильтрации
 export interface FilterSettings {
   ignoredDirectories: string[];
   ignoredFiles: string[];
