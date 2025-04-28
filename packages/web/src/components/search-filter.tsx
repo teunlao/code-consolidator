@@ -3,8 +3,14 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
+import { Search, X, Info } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SearchFilterProps {
   onSearch: (pattern: string) => void;
@@ -43,6 +49,24 @@ export function SearchFilter({ onSearch }: SearchFilterProps) {
             <X className="h-4 w-4" />
           </button>
         )}
+        
+        {/* Иконка с подсказкой о функции автоматического раскрытия */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="absolute right-12 top-2.5 text-gray-400 hover:text-gray-200"
+                onClick={(e) => e.preventDefault()}
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>При поиске папки будут автоматически раскрыты, если количество найденных файлов не превышает 10.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <Button 
         type="submit" 

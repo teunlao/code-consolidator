@@ -5,15 +5,20 @@ import { formatFileSize } from '@/lib/format-utils';
 import type { FileNode } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface FileTreeProps {
   data: FileNode;
   onSelect: (path: string, selected: boolean) => void;
+  searchQuery?: string; // Добавляем опциональный параметр поискового запроса
 }
 
-export function FileTree({ data, onSelect }: FileTreeProps) {
+export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  
+  // Константа для ограничения количества результатов поиска,
+  // при котором папки будут автоматически раскрываться
+  const AUTO_EXPAND_THRESHOLD = 10;
 
   const toggleExpand = (path: string) => {
     setExpanded((prev) => ({
@@ -21,10 +26,95 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
       [path]: !prev[path],
     }));
   };
+  
+  // Функция для подсчета количества совпадений в дереве
+  const countSearchMatches = (node: FileNode, query: string): number => {
+    // Если нет запроса, возвращаем 0
+    if (!query) return 0;
+    
+    let count = 0;
+    
+    // Проверяем, совпадает ли имя текущего узла с запросом
+    if (node.name.toLowerCase().includes(query.toLowerCase())) {
+      count++;
+    }
+    
+    // Рекурсивно проверяем все дочерние узлы
+    if (node.children) {
+      node.children.forEach(child => {
+        count += countSearchMatches(child, query);
+      });
+    }
+    
+    return count;
+  };
+  
+  // Функция для раскрытия папок с совпадениями
+  const expandMatchingFolders = (node: FileNode, query: string, paths: string[] = []): string[] => {
+    // Если нет запроса или узел - не папка, или у него нет детей, просто возвращаем текущие пути
+    if (!query || node.type !== 'directory' || !node.children) return paths;
+    
+    // Проверяем, есть ли совпадения среди дочерних элементов
+    let hasMatches = false;
+    
+    for (const child of node.children) {
+      // Проверяем совпадение имени
+      if (child.name.toLowerCase().includes(query.toLowerCase())) {
+        hasMatches = true;
+      }
+      
+      // Проверяем детей рекурсивно и добавляем их пути
+      if (child.type === 'directory' && child.children) {
+        const childPaths = expandMatchingFolders(child, query, []);
+        if (childPaths.length > 0) {
+          hasMatches = true;
+          paths = [...paths, ...childPaths];
+        }
+      }
+    }
+    
+    // Если есть совпадения, добавляем текущий путь в список путей для раскрытия
+    if (hasMatches) {
+      paths.push(node.path);
+    }
+    
+    return paths;
+  };
 
   const handleSelectChange = (node: FileNode, checked: boolean) => {
     onSelect(node.path, checked);
   };
+  
+  // Эффект для автоматического раскрытия папок при поиске
+  useEffect(() => {
+    // Если нет поискового запроса или он слишком короткий, очищаем раскрытые папки
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      return;
+    }
+    
+    // Подсчитываем количество совпадений
+    const matchesCount = countSearchMatches(data, searchQuery);
+    
+    // Если совпадений слишком много, не раскрываем папки автоматически
+    if (matchesCount > AUTO_EXPAND_THRESHOLD) {
+      console.log(`Найдено ${matchesCount} совпадений, превышен порог автоматического раскрытия (${AUTO_EXPAND_THRESHOLD})`);
+      return;
+    }
+    
+    // Получаем пути папок, которые нужно раскрыть
+    const pathsToExpand = expandMatchingFolders(data, searchQuery);
+    
+    // Обновляем состояние раскрытых папок
+    if (pathsToExpand.length > 0) {
+      setExpanded(prev => {
+        const newExpanded = { ...prev };
+        pathsToExpand.forEach(path => {
+          newExpanded[path] = true;
+        });
+        return newExpanded;
+      });
+    }
+  }, [searchQuery, data]);
   
   // Функция для расчета размера папки, суммируя размеры всех файлов внутри
   const calculateDirectorySize = (node: FileNode): number => {

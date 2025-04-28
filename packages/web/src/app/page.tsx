@@ -151,6 +151,9 @@ export default function Home() {
   // Функция для поиска в дереве файлов
   const handleSearch = (query: string) => {
     setSearchQuery(query.toLowerCase());
+    
+    // Поисковый запрос будет передан в FileTree компонент
+    // и папки будут автоматически раскрыты, если результатов немного
   };
   
   // Фильтрация дерева файлов по поисковому запросу
@@ -204,7 +207,8 @@ export default function Home() {
           {filteredTree ? (
             <FileTree 
               data={filteredTree} 
-              onSelect={handleSelectNode} 
+              onSelect={handleSelectNode}
+              searchQuery={searchQuery}
             />
           ) : (
             <div className="border border-gray-700 rounded-md p-8 text-center bg-gray-800">
