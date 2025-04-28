@@ -1,6 +1,6 @@
 {
   "name": "@teunlao/code-consolidator",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "private": false,
   "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF documentation.",
   "keywords": [
@@ -25,8 +25,8 @@
     "start": "next start",
     "lint": "next lint",
     "build:bin": "tsc -p tsconfig.bin.json",
-    "prepare": "npm run build:bin",
-    "publish-package": "npm run build && npm run build:bin && npm publish --access public"
+    "prepare": "pnpm run build:bin",
+    "publish-package": "pnpm run build && pnpm run build:bin && pnpm publish --access public"
   },
   "files": [
     "dist",
