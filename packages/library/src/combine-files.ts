@@ -6,10 +6,7 @@ import PDFDocument from 'pdfkit';
 
 type InputFile = string | { [key: string]: string | InputFile };
 
-function shouldIgnorePath(
-  path: string,
-  ignorePaths?: (string | RegExp)[],
-): boolean {
+function shouldIgnorePath(path: string, ignorePaths?: (string | RegExp)[]): boolean {
   if (!ignorePaths) {
     return false;
   }
@@ -17,7 +14,8 @@ function shouldIgnorePath(
   return ignorePaths.some((pattern) => {
     if (typeof pattern === 'string') {
       return path.includes(pattern);
-    } else if (pattern instanceof RegExp) {
+    }
+    if (pattern instanceof RegExp) {
       return pattern.test(path);
     }
     return false;
@@ -45,10 +43,7 @@ export function defineConsolidatorConfig(config: Config = baseConfig) {
   };
 }
 
-function readFileContent(
-  filePath: string,
-  includeComments: boolean = true,
-): string {
+function readFileContent(filePath: string, includeComments = true): string {
   try {
     let content = fs.readFileSync(filePath, 'utf-8');
     if (!includeComments) {
