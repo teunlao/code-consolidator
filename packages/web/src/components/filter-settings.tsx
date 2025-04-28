@@ -64,33 +64,33 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
       <Button
         variant="outline"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-center"
+        className="w-full flex items-center justify-center bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
       >
         <Settings className="h-4 w-4 mr-2" />
         <span>Настройки фильтрации</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gray-800 border-gray-700 text-gray-100">
           <DialogHeader>
-            <DialogTitle>Настройки фильтрации</DialogTitle>
+            <DialogTitle className="text-gray-100">Настройки фильтрации</DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-gray-400 mb-4">
               Настройте правила фильтрации файлов и директорий проекта.
             </p>
             
             <Tabs defaultValue="directories">
-              <TabsList className="w-full">
-                <TabsTrigger value="directories" className="flex-1">Директории</TabsTrigger>
-                <TabsTrigger value="files" className="flex-1">Файлы</TabsTrigger>
-                <TabsTrigger value="extensions" className="flex-1">Расширения</TabsTrigger>
+              <TabsList className="w-full bg-gray-700">
+                <TabsTrigger value="directories" className="flex-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Директории</TabsTrigger>
+                <TabsTrigger value="files" className="flex-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Файлы</TabsTrigger>
+                <TabsTrigger value="extensions" className="flex-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Расширения</TabsTrigger>
               </TabsList>
 
               <TabsContent value="directories" className="mt-4 space-y-4">
                 <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="use-default-ignores">Использовать стандартные игнорируемые директории</Label>
+                  <Label htmlFor="use-default-ignores" className="text-gray-200">Использовать стандартные игнорируемые директории</Label>
                   <Switch
                     id="use-default-ignores"
                     checked={settings.useDefaultIgnores}
@@ -100,15 +100,16 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                         useDefaultIgnores: checked,
                       });
                     }}
+                    className="data-[state=checked]:bg-blue-600"
                   />
                 </div>
 
                 {settings.useDefaultIgnores && (
                   <div className="mb-4">
-                    <Label className="text-sm text-muted-foreground">Стандартные игнорируемые директории:</Label>
+                    <Label className="text-sm text-gray-400">Стандартные игнорируемые директории:</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {DEFAULT_IGNORED_DIRECTORIES.map((dir) => (
-                        <div key={dir} className="bg-muted text-muted-foreground text-xs rounded px-2 py-1">
+                        <div key={dir} className="bg-gray-700 text-gray-300 text-xs rounded px-2 py-1">
                           {dir}
                         </div>
                       ))}
@@ -117,7 +118,7 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                 )}
 
                 <div>
-                  <Label>Дополнительные игнорируемые директории:</Label>
+                  <Label className="text-gray-200">Дополнительные игнорируемые директории:</Label>
                   <EditableList
                     items={settings.ignoredDirectories}
                     onItemsChange={(items) => onSettingsChange({ ...settings, ignoredDirectories: items })}
@@ -128,7 +129,7 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
               </TabsContent>
 
               <TabsContent value="files" className="mt-4 space-y-4">
-                <Label>Игнорируемые файлы (можно использовать * как шаблон):</Label>
+                <Label className="text-gray-200">Игнорируемые файлы (можно использовать * как шаблон):</Label>
                 <EditableList
                   items={settings.ignoredFiles}
                   onItemsChange={(items) => onSettingsChange({ ...settings, ignoredFiles: items })}
@@ -139,7 +140,7 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
 
               <TabsContent value="extensions" className="mt-4 space-y-4">
                 <div>
-                  <Label>Игнорируемые расширения файлов:</Label>
+                  <Label className="text-gray-200">Игнорируемые расширения файлов:</Label>
                   <EditableList
                     items={settings.ignoredExtensions}
                     onItemsChange={(items) => onSettingsChange({ ...settings, ignoredExtensions: items })}
@@ -151,8 +152,8 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
                 </div>
 
                 <div className="mt-6">
-                  <Label>Разрешенные расширения файлов:</Label>
-                  <p className="text-sm text-muted-foreground mb-2">
+                  <Label className="text-gray-200">Разрешенные расширения файлов:</Label>
+                  <p className="text-sm text-gray-400 mb-2">
                     Если указано хотя бы одно расширение, будут включены только файлы с этими расширениями
                   </p>
                   <EditableList
@@ -169,7 +170,7 @@ export function FilterSettingsButton({ settings, onSettingsChange }: FilterSetti
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setOpen(false)} className="bg-black text-white hover:bg-black/90">
+            <Button onClick={() => setOpen(false)} className="bg-blue-600 text-white hover:bg-blue-700">
               Сохранить
             </Button>
           </DialogFooter>

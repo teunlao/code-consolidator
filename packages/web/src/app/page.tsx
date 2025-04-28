@@ -299,16 +299,16 @@ export default function Home() {
   
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        <span className="ml-2 text-lg">Загрузка структуры проекта...</span>
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+        <span className="ml-2 text-lg text-gray-200">Загрузка структуры проекта...</span>
       </div>
     );
   }
   
   return (
-    <main className="container mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">Code Consolidator</h1>
+    <main className="container mx-auto py-8 px-4 bg-gray-900">
+      <h1 className="text-2xl font-bold mb-6 text-gray-100">Code Consolidator</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-4">
@@ -320,15 +320,15 @@ export default function Home() {
               onSelect={handleSelectNode} 
             />
           ) : (
-            <div className="border rounded-md p-8 text-center">
-              <p className="text-gray-500">Файлы не найдены</p>
+            <div className="border border-gray-700 rounded-md p-8 text-center bg-gray-800">
+              <p className="text-gray-400">Файлы не найдены</p>
             </div>
           )}
         </div>
         
         <div className="space-y-4">
           {/* Блок с настройками фильтрации и кнопкой сброса */}
-          <div className="border rounded-md p-4 space-y-3">
+          <div className="border border-gray-700 rounded-md p-4 space-y-3 bg-gray-800">
             {/* Кнопка сброса над кнопкой фильтрации */}
             <div className="w-full">
               <Button 
@@ -336,7 +336,7 @@ export default function Home() {
                 size="sm" 
                 onClick={resetAllSettings}
                 title="Сбросить все настройки"
-                className="w-full"
+                className="w-full bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
               >
                 <RotateCcw className="h-4 w-4 mr-1" /> Сбросить
               </Button>
@@ -366,17 +366,17 @@ export default function Home() {
       
       {/* Диалог успешной генерации */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent>
+        <DialogContent className="bg-gray-800 border-gray-700 text-gray-100">
           <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Check className="h-6 w-6 text-green-500 mr-2" />
+            <DialogTitle className="flex items-center text-gray-100">
+              <Check className="h-6 w-6 text-green-400 mr-2" />
               PDF успешно сгенерирован
             </DialogTitle>
           </DialogHeader>
           
           <div className="py-4">
-            <p className="mb-4">Файл сохранен по пути:</p>
-            <code className="bg-gray-100 p-2 rounded block overflow-x-auto">
+            <p className="mb-4 text-gray-300">Файл сохранен по пути:</p>
+            <code className="bg-gray-900 text-gray-300 p-2 rounded block overflow-x-auto border border-gray-700">
               {generatedPdfPath}
             </code>
           </div>
@@ -384,7 +384,7 @@ export default function Home() {
           <div className="flex justify-end">
             <Button 
               onClick={() => setShowSuccessDialog(false)}
-              className="mr-2"
+              className="mr-2 bg-gray-700 hover:bg-gray-600 text-gray-200 border-gray-600"
               variant="outline"
             >
               Закрыть
@@ -395,10 +395,10 @@ export default function Home() {
       
       {/* Индикатор генерации */}
       {generating && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl flex items-center">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500 mr-3" />
-            <span>Генерация PDF...</span>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl flex items-center border border-gray-700">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-400 mr-3" />
+            <span className="text-gray-200">Генерация PDF...</span>
           </div>
         </div>
       )}

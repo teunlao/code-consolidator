@@ -34,8 +34,8 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
       <div key={node.path}>
         <div
           className={cn(
-            'flex items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-2',
-            node.selected && 'bg-blue-50 dark:bg-blue-900/20',
+            'flex items-center py-1 hover:bg-gray-700 rounded px-2',
+            node.selected && 'bg-blue-900/30',
           )}
           style={{ paddingLeft: `${depth * 16}px` }}
         >
@@ -50,24 +50,24 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
             <button type="button" onClick={() => toggleExpand(node.path)} className="mr-2 focus:outline-none">
               {hasChildren &&
                 (isExpanded ? (
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-gray-500" />
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
                 ))}
               {!hasChildren && <div className="w-4" />}
             </button>
           )}
 
           {node.type === 'directory' ? (
-            <Folder className="h-4 w-4 mr-2 text-blue-500" />
+            <Folder className="h-4 w-4 mr-2 text-blue-400" />
           ) : (
-            <File className="h-4 w-4 mr-2 text-gray-500" />
+            <File className="h-4 w-4 mr-2 text-gray-400" />
           )}
 
-          <span className="mr-2 text-sm">{node.name}</span>
+          <span className="mr-2 text-sm text-gray-200">{node.name}</span>
 
           {node.type === 'file' && node.size !== undefined && (
-            <span className="text-xs text-gray-500 ml-auto">{formatFileSize(node.size)}</span>
+            <span className="text-xs text-gray-400 ml-auto">{formatFileSize(node.size)}</span>
           )}
         </div>
 
@@ -78,5 +78,5 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
     );
   };
 
-  return <div className="overflow-y-auto max-h-[calc(100vh-250px)] border rounded-md p-2">{renderNode(data)}</div>;
+  return <div className="overflow-y-auto max-h-[calc(100vh-250px)] border border-gray-700 rounded-md p-2 bg-gray-800">{renderNode(data)}</div>;
 }

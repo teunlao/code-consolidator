@@ -70,20 +70,21 @@ export function EditableList({
           }}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
-          className="flex-1"
+          className="flex-1 bg-gray-700 border-gray-600 text-gray-200 focus:ring-blue-500 focus:border-blue-500"
         />
         <Button
           type="button"
           onClick={handleAddItem}
           size="sm"
           variant="outline"
+          className="bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
         >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
       
       {error && (
-        <p className="text-sm text-destructive mt-1">{error}</p>
+        <p className="text-sm text-red-400 mt-1">{error}</p>
       )}
       
       {items.length > 0 && (
