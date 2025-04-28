@@ -1,13 +1,19 @@
 'use client';
 
 import React from 'react';
-import { useProjects } from '@/lib/use-projects';
+import { useProjectsStore } from '@/lib/stores/projects-store';
 import { formatDate } from '@/lib/format-utils';
 import { Badge } from '@/components/ui/badge';
 import { Layers, Clock, FilePlus } from 'lucide-react';
 
 export function ProjectInfo() {
-  const { activeProject, activeProfile } = useProjects();
+  const { 
+    getActiveProject, 
+    getActiveProfile 
+  } = useProjectsStore();
+  
+  const activeProject = getActiveProject();
+  const activeProfile = getActiveProfile();
   
   if (!activeProject) {
     return null;

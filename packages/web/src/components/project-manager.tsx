@@ -14,20 +14,29 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Check, ChevronDown, FilePlus, FolderPlus, Pencil, Trash2, Layers } from 'lucide-react';
-import { useProjects } from '@/lib/use-projects';
-import { Project, Profile } from '@/lib/projects-storage';
+import { useProjectsStore, Project, Profile } from '@/lib/stores/projects-store';
 
 // Компонент для отображения выбранного проекта и профиля
 export function ProjectSelector() {
   const { 
     projects, 
-    activeProject, 
-    activeProfile, 
+    activeProjectId,
+    activeProfileId,
+    getActiveProject,
+    getActiveProfile,
     setActiveProject, 
-    setActiveProfile 
-  } = useProjects();
+    setActiveProfile,
+    createProject: storeCreateProject,
+    createProfile: storeCreateProfile,
+    updateProject,
+    updateProfile,
+    deleteProject,
+    deleteProfile
+  } = useProjectsStore();
+  
+  const activeProject = getActiveProject();
+  const activeProfile = getActiveProfile();
   
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showNewProfileDialog, setShowNewProfileDialog] = useState(false);
@@ -50,6 +59,7 @@ export function ProjectSelector() {
         <NewProjectDialog 
           isOpen={showNewProjectDialog} 
           onClose={() => setShowNewProjectDialog(false)} 
+          createProject={storeCreateProject}
         />
       </div>
     );
@@ -82,10 +92,10 @@ export function ProjectSelector() {
                   className="flex items-center cursor-pointer hover:bg-gray-700"
                   onClick={() => setActiveProject(project.id)}
                 >
-                  {activeProject?.id === project.id && (
+                  {activeProjectId === project.id && (
                     <Check className="h-4 w-4 mr-2 text-green-400" />
                   )}
-                  <span className={activeProject?.id === project.id ? "flex-1 font-medium" : "flex-1"}>
+                  <span className={activeProjectId === project.id ? "flex-1 font-medium" : "flex-1"}>
                     {project.name}
                   </span>
                 </DropdownMenuItem>
@@ -150,10 +160,10 @@ export function ProjectSelector() {
                     className="flex items-center cursor-pointer hover:bg-gray-700"
                     onClick={() => setActiveProfile(profile.id)}
                   >
-                    {activeProfile?.id === profile.id && (
+                    {activeProfileId === profile.id && (
                       <Check className="h-4 w-4 mr-2 text-green-400" />
                     )}
-                    <span className={activeProfile?.id === profile.id ? "flex-1 font-medium" : "flex-1"}>
+                    <span className={activeProfileId === profile.id ? "flex-1 font-medium" : "flex-1"}>
                       {profile.name}
                     </span>
                   </DropdownMenuItem>
@@ -187,6 +197,7 @@ export function ProjectSelector() {
       <NewProjectDialog 
         isOpen={showNewProjectDialog} 
         onClose={() => setShowNewProjectDialog(false)} 
+        createProject={storeCreateProject}
       />
       
       {activeProject && (
@@ -195,12 +206,15 @@ export function ProjectSelector() {
             isOpen={showEditProjectDialog} 
             onClose={() => setShowEditProjectDialog(false)}
             project={activeProject}
+            updateProject={updateProject}
+            deleteProject={deleteProject}
           />
           
           <NewProfileDialog 
             isOpen={showNewProfileDialog} 
             onClose={() => setShowNewProfileDialog(false)}
             projectId={activeProject.id}
+            createProfile={storeCreateProfile}
           />
           
           {activeProfile && (
@@ -209,6 +223,8 @@ export function ProjectSelector() {
               onClose={() => setShowEditProfileDialog(false)}
               projectId={activeProject.id}
               profile={activeProfile}
+              updateProfile={updateProfile}
+              deleteProfile={deleteProfile}
             />
           )}
         </>
@@ -218,16 +234,20 @@ export function ProjectSelector() {
 }
 
 // Диалог создания нового проекта
-function NewProjectDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { createProject, setActiveProject } = useProjects();
+interface NewProjectDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  createProject: (name: string, description?: string) => Project;
+}
+
+function NewProjectDialog({ isOpen, onClose, createProject }: NewProjectDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   
   const handleSubmit = () => {
     if (!name.trim()) return;
     
-    const newProject = createProject(name.trim(), description.trim() || undefined);
-    setActiveProject(newProject.id);
+    createProject(name.trim(), description.trim() || undefined);
     setName('');
     setDescription('');
     onClose();
@@ -278,16 +298,21 @@ function NewProjectDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 }
 
 // Диалог редактирования проекта
-function EditProjectDialog({ 
-  isOpen, 
-  onClose, 
-  project 
-}: { 
+interface EditProjectDialogProps {
   isOpen: boolean; 
   onClose: () => void; 
   project: Project;
-}) {
-  const { updateProject, deleteProject } = useProjects();
+  updateProject: (projectId: string, updates: Partial<Project>) => void;
+  deleteProject: (projectId: string) => void;
+}
+
+function EditProjectDialog({ 
+  isOpen, 
+  onClose, 
+  project,
+  updateProject,
+  deleteProject
+}: EditProjectDialogProps) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -381,16 +406,19 @@ function EditProjectDialog({
 }
 
 // Диалог создания нового профиля
+interface NewProfileDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  projectId: string;
+  createProfile: (projectId: string, name: string, description?: string, inheritFromProject?: boolean) => Profile;
+}
+
 function NewProfileDialog({ 
   isOpen, 
   onClose, 
-  projectId 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  projectId: string;
-}) {
-  const { createProfile, setActiveProfile } = useProjects();
+  projectId,
+  createProfile
+}: NewProfileDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [inheritSettings, setInheritSettings] = useState(true);
@@ -398,13 +426,12 @@ function NewProfileDialog({
   const handleSubmit = () => {
     if (!name.trim()) return;
     
-    const newProfile = createProfile(
+    createProfile(
       projectId, 
       name.trim(), 
       description.trim() || undefined, 
       inheritSettings
     );
-    setActiveProfile(newProfile.id);
     setName('');
     setDescription('');
     setInheritSettings(true);
@@ -468,18 +495,23 @@ function NewProfileDialog({
 }
 
 // Диалог редактирования профиля
+interface EditProfileDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  projectId: string;
+  profile: Profile;
+  updateProfile: (projectId: string, profileId: string, updates: Partial<Profile>) => void;
+  deleteProfile: (projectId: string, profileId: string) => void;
+}
+
 function EditProfileDialog({ 
   isOpen, 
   onClose, 
   projectId,
-  profile 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  projectId: string;
-  profile: Profile;
-}) {
-  const { updateProfile, deleteProfile } = useProjects();
+  profile,
+  updateProfile,
+  deleteProfile
+}: EditProfileDialogProps) {
   const [name, setName] = useState(profile.name);
   const [description, setDescription] = useState(profile.description || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

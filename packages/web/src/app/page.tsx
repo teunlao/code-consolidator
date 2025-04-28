@@ -11,9 +11,8 @@ import { FileNode, FilterSettings } from '@/lib/types';
 import { FilterSettingsButton } from '@/components/filter-settings';
 import { ProjectSelector } from '@/components/project-manager';
 import { ProjectInfo } from '@/components/project-info';
-import { useProjects } from '@/lib/use-projects';
+import { useProjectsStore, DEFAULT_PROJECT_SETTINGS } from '@/lib/stores/projects-store';
 import { getSelectedFilePaths, updateNodeSelection, countSelectedFiles } from '@/lib/tree-utils';
-import { applySelectedFilesToTree } from '@/lib/projects-storage';
 
 export default function Home() {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
@@ -24,21 +23,19 @@ export default function Home() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [selectedFilesCount, setSelectedFilesCount] = useState(0);
   
-  // Используем хук для проектов и профилей
-  const { 
-    activeSettings, 
-    activeProject, 
-    activeProfile,
-    updateActiveSettings, 
-    isLoaded
-  } = useProjects();
+  // Используем Zustand-хранилище для проектов и профилей
+  const {
+    getActiveSettings,
+    updateActiveSettings,
+    applySelectedFilesToTree
+  } = useProjectsStore();
+  
+  const activeSettings = getActiveSettings();
   
   // Загрузка дерева файлов при инициализации или изменении настроек фильтрации
   useEffect(() => {
-    if (isLoaded) {
-      fetchFileTree(activeSettings.filterSettings);
-    }
-  }, [isLoaded, activeSettings.filterSettings, activeProject?.id, activeProfile?.id]);
+    fetchFileTree(activeSettings.filterSettings);
+  }, [activeSettings.filterSettings]);
   
   // Функция для загрузки дерева файлов
   async function fetchFileTree(filterSettings: FilterSettings) {
