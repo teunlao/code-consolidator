@@ -7,15 +7,7 @@ import { SearchFilter } from '@/components/search-filter';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Check, Download, Loader2 } from 'lucide-react';
-
-interface FileNode {
-  name: string;
-  path: string;
-  type: 'file' | 'directory';
-  children?: FileNode[];
-  size?: number;
-  selected: boolean;
-}
+import { FileNode } from '@/lib/types';
 
 export default function Home() {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);

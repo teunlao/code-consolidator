@@ -8,6 +8,8 @@ project_files.ts
 out.gen.txt
 gen.config.ts
 out.gen.pdf
+.next
+.env
 
 # Logs
 logs

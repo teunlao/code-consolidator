@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 
 // Путь к директории пакета
-const packageDir = path.resolve(__dirname, '..');
+const packageDir = path.resolve(__dirname, '../..');
 
 // Проверяем есть ли директория 'dist' для next.js приложения
 const distDir = path.join(packageDir, '.next');
