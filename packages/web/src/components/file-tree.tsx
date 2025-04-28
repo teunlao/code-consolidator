@@ -104,8 +104,14 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
           )}
           style={{ paddingLeft: `${(depth + 1) * 12 + 4}px` }}
           onClick={(e) => {
-            // Предотвращаем всплытие события, если клик был на чекбоксе
-            if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('[role="checkbox"]')) {
+            // Проверяем, является ли целевой элемент чекбоксом или его контейнером
+            const isCheckboxClick = 
+              (e.target as HTMLElement).getAttribute('role') === 'checkbox' || 
+              (e.target as HTMLElement).closest('[role="checkbox"]') || 
+              (e.target as HTMLElement).closest('button');
+              
+            // Если клик был на чекбоксе или внутри контейнера чекбокса, игнорируем клик
+            if (isCheckboxClick) {
               return;
             }
 
@@ -119,14 +125,16 @@ export function FileTree({ data, onSelect }: FileTreeProps) {
             }
           }}
         >
-          <Checkbox
-            id={node.path}
-            checked={node.selected}
-            onCheckedChange={(checked: boolean | 'indeterminate') => handleSelectChange(node, checked === true)}
-            className="mr-2 border-gray-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-            // Останавливаем всплытие события при клике на чекбокс
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div onClick={(e) => {
+            e.stopPropagation(); // Останавливаем всплытие события от контейнера чекбокса
+          }}>
+            <Checkbox
+              id={node.path}
+              checked={node.selected}
+              onCheckedChange={(checked: boolean | 'indeterminate') => handleSelectChange(node, checked === true)}
+              className="mr-2 border-gray-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
+          </div>
 
           {/* Фиксированная область для стрелок, всегда одинаковой ширины */}
           <div className="w-4 h-4 mr-2 flex items-center justify-center flex-shrink-0">
