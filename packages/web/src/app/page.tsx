@@ -6,8 +6,18 @@ import { ConfigPanel } from '@/components/config-panel';
 import { SearchFilter } from '@/components/search-filter';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Check, Download, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { FileNode } from '@/lib/types';
+import { FilterSettingsButton } from '@/components/filter-settings';
+
+// Интерфейс для настроек фильтрации
+interface FilterSettings {
+  ignoredDirectories: string[];
+  ignoredFiles: string[];
+  ignoredExtensions: string[];
+  allowedExtensions: string[];
+  useDefaultIgnores: boolean;
+}
 
 export default function Home() {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
@@ -21,25 +31,63 @@ export default function Home() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [selectedFilesCount, setSelectedFilesCount] = useState(0);
   
+  // Состояние для настроек фильтрации
+  const [filterSettings, setFilterSettings] = useState<FilterSettings>({
+    ignoredDirectories: [],
+    ignoredFiles: [],
+    ignoredExtensions: [],
+    allowedExtensions: [],
+    useDefaultIgnores: true,
+  });
+  
   // Загрузка дерева файлов
   useEffect(() => {
-    async function fetchFileTree() {
-      try {
-        const response = await fetch('/api/file-tree');
-        const data = await response.json();
-        
-        if (data.fileTree) {
-          setFileTree(data.fileTree);
-        }
-      } catch (error) {
-        console.error('Error fetching file tree:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
     fetchFileTree();
   }, []);
+  
+  // Повторная загрузка дерева файлов при изменении настроек фильтрации
+  useEffect(() => {
+    fetchFileTree(filterSettings);
+  }, [filterSettings]);
+  
+  // Функция для загрузки дерева файлов
+  async function fetchFileTree(settings?: FilterSettings) {
+    try {
+      setLoading(true);
+      
+      let response;
+      if (settings) {
+        // Если есть настройки, отправляем их через POST
+        response = await fetch('/api/file-tree', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filterSettings: settings
+          }),
+        });
+      } else {
+        // Иначе используем GET без параметров
+        response = await fetch('/api/file-tree');
+      }
+      
+      const data = await response.json();
+      
+      if (data.fileTree) {
+        setFileTree(data.fileTree);
+      }
+    } catch (error) {
+      console.error('Error fetching file tree:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  // Функция для обновления настроек фильтрации
+  const handleFilterSettingsChange = (newSettings: FilterSettings) => {
+    setFilterSettings(newSettings);
+  };
   
   // Функция для обновления выбранных файлов в дереве
   const handleSelectNode = (path: string, selected: boolean) => {
@@ -210,7 +258,15 @@ export default function Home() {
           )}
         </div>
         
-        <div>
+        <div className="space-y-4">
+          {/* Кнопка настройки фильтрации теперь справа */}
+          <div className="border rounded-md p-4">
+            <FilterSettingsButton 
+              settings={filterSettings}
+              onSettingsChange={handleFilterSettingsChange}
+            />
+          </div>
+          
           <ConfigPanel 
             includeComments={includeComments}
             onIncludeCommentsChange={setIncludeComments}

@@ -10,8 +10,16 @@ export interface FileNode {
   selected?: boolean;
 }
 
-// Список игнорируемых директорий и файлов
-const ignoredDirectories = [
+export interface FilterSettings {
+  ignoredDirectories: string[];
+  ignoredFiles: string[];
+  ignoredExtensions: string[];
+  allowedExtensions: string[];
+  useDefaultIgnores: boolean;
+}
+
+// Стандартные списки игнорируемых элементов
+const DEFAULT_IGNORED_DIRECTORIES = [
   'node_modules',
   '.git',
   'dist',
@@ -24,7 +32,7 @@ const ignoredDirectories = [
   '.nuxt',
 ];
 
-const ignoredFiles = [
+const DEFAULT_IGNORED_FILES = [
   '.DS_Store',
   '*.log',
   '*.tmp',
@@ -39,7 +47,7 @@ const ignoredFiles = [
   'out.gen.txt',
 ];
 
-const ignoredExtensions = [
+const DEFAULT_IGNORED_EXTENSIONS = [
   '.old',
   '.svg',
   '.png',
@@ -74,18 +82,38 @@ const ignoredExtensions = [
 ];
 
 // Проверка нужно ли игнорировать файл/директорию
-export function shouldIgnore(filePath: string, stats: fs.Stats): boolean {
+export function shouldIgnore(filePath: string, stats: fs.Stats, settings?: FilterSettings): boolean {
   const baseName = path.basename(filePath);
+  const ext = path.extname(baseName).toLowerCase();
   
-  if (stats.isDirectory() && ignoredDirectories.includes(baseName)) {
+  // Формируем списки файлов и директорий для игнорирования на основе настроек
+  const ignoredDirs = settings?.useDefaultIgnores 
+    ? [...DEFAULT_IGNORED_DIRECTORIES, ...(settings?.ignoredDirectories || [])]
+    : settings?.ignoredDirectories || [];
+    
+  const ignoredFiles = settings?.useDefaultIgnores
+    ? [...DEFAULT_IGNORED_FILES, ...(settings?.ignoredFiles || [])]
+    : settings?.ignoredFiles || [];
+    
+  const ignoredExts = settings?.useDefaultIgnores
+    ? [...DEFAULT_IGNORED_EXTENSIONS, ...(settings?.ignoredExtensions || [])]
+    : settings?.ignoredExtensions || [];
+    
+  const allowedExts = settings?.allowedExtensions || [];
+  
+  // Проверяем директории
+  if (stats.isDirectory() && ignoredDirs.includes(baseName)) {
     return true;
   }
   
+  // Проверяем файлы
   if (stats.isFile()) {
+    // Проверяем по имени файла
     if (ignoredFiles.includes(baseName)) {
       return true;
     }
     
+    // Проверяем по шаблонам файлов
     for (const pattern of ignoredFiles) {
       if (pattern.includes('*') && 
           new RegExp('^' + pattern.replace(/\*/g, '.*').replace(/\./g, '\\.') + '$').test(baseName)) {
@@ -93,8 +121,13 @@ export function shouldIgnore(filePath: string, stats: fs.Stats): boolean {
       }
     }
     
-    const ext = path.extname(baseName).toLowerCase();
-    if (ignoredExtensions.includes(ext)) {
+    // Проверяем по расширению
+    if (ignoredExts.includes(ext)) {
+      return true;
+    }
+    
+    // Если указаны разрешенные расширения, проверяем, входит ли файл в этот список
+    if (allowedExts.length > 0 && !allowedExts.includes(ext)) {
       return true;
     }
   }
@@ -114,7 +147,7 @@ export function getFileSize(filePath: string): number {
 }
 
 // Построение дерева файлов
-export async function buildFileTree(dirPath: string): Promise<FileNode> {
+export async function buildFileTree(dirPath: string, settings?: FilterSettings): Promise<FileNode> {
   try {
     const stats = fs.statSync(dirPath);
     const name = path.basename(dirPath);
@@ -137,9 +170,9 @@ export async function buildFileTree(dirPath: string): Promise<FileNode> {
         const filePath = path.join(dirPath, file);
         const fileStats = fs.statSync(filePath);
         
-        if (!shouldIgnore(filePath, fileStats)) {
+        if (!shouldIgnore(filePath, fileStats, settings)) {
           try {
-            const node = await buildFileTree(filePath);
+            const node = await buildFileTree(filePath, settings);
             children.push(node);
           } catch (error) {
             console.error(`Error processing ${filePath}:`, error);
@@ -167,43 +200,6 @@ export async function buildFileTree(dirPath: string): Promise<FileNode> {
   } catch (error) {
     console.error(`Error building file tree for ${dirPath}:`, error);
     throw error;
-  }
-}
-
-// Функция для получения всех выбранных файлов из дерева
-export function getSelectedFiles(node: FileNode): string[] {
-  let selected: string[] = [];
-  
-  if (node.selected && node.type === 'file') {
-    selected.push(node.path);
-  }
-  
-  if (node.children) {
-    for (const child of node.children) {
-      selected = selected.concat(getSelectedFiles(child));
-    }
-  }
-  
-  return selected;
-}
-
-// Получить общий контент файла с указанием пути
-export function getFileContent(filePath: string, includeComments: boolean = true): string {
-  try {
-    let content = fs.readFileSync(filePath, 'utf-8');
-    
-    if (!includeComments) {
-      // Удаляем комментарии
-      content = content
-        .replace(/\/\/.*$/gm, '') // Однострочные комментарии
-        .replace(/\/\*[\s\S]*?\*\//g, '') // Многострочные комментарии
-        .replace(/^\s*[\r\n]/gm, ''); // Пустые строки
-    }
-    
-    return content;
-  } catch (error) {
-    console.error(`Error reading file ${filePath}:`, error);
-    return '';
   }
 }
 

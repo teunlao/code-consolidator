@@ -8,3 +8,11 @@ export interface FileNode {
   size?: number;
   selected: boolean;
 }
+
+export interface FilterSettings {
+  ignoredDirectories: string[];
+  ignoredFiles: string[];
+  ignoredExtensions: string[];
+  allowedExtensions: string[];
+  useDefaultIgnores: boolean;
+}
