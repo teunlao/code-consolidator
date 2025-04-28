@@ -14,8 +14,12 @@ interface FileTreeProps {
   searchQuery?: string; // Добавляем опциональный параметр поискового запроса
 }
 
+// Используем хранилище для сохранения состояния раскрытых папок между ререндерами
+import { useLocalStorage } from '@/lib/hooks/use-local-storage';
+
 export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // Используем LocalStorage для хранения состояния раскрытых папок
+  const [expanded, setExpanded] = useLocalStorage<Record<string, boolean>>("file-tree-expanded-state", {});
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [codeViewerOpen, setCodeViewerOpen] = useState<boolean>(false);
   const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);

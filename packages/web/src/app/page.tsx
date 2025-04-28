@@ -33,15 +33,26 @@ export default function Home() {
   
   const activeSettings = getActiveSettings();
   
+  // Храним информацию о том, была ли первая загрузка
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  
   // Загрузка дерева файлов при инициализации или изменении настроек фильтрации
   useEffect(() => {
-    fetchFileTree(activeSettings.filterSettings);
-  }, [activeSettings.filterSettings]);
+    const isFirstLoad = !initialLoadDone;
+    fetchFileTree(activeSettings.filterSettings, isFirstLoad);
+    
+    if (!initialLoadDone) {
+      setInitialLoadDone(true);
+    }
+  }, [activeSettings.filterSettings, initialLoadDone]);
   
   // Функция для загрузки дерева файлов
-  async function fetchFileTree(filterSettings: FilterSettings) {
+  async function fetchFileTree(filterSettings: FilterSettings, isInitialLoad = false) {
     try {
-      setLoading(true);
+      // Устанавливаем лоадер только при первой загрузке, но не при смене профиля/проекта
+      if (isInitialLoad) {
+        setLoading(true);
+      }
       
       let response = await fetch('/api/file-tree', {
         method: 'POST',
@@ -69,7 +80,9 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching file tree:', error);
     } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     }
   }
   
