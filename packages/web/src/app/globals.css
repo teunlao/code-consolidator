@@ -74,3 +74,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Дополнительные стили для улучшения непрозрачности в приложении */
+.dropdown-menu,
+[role="listbox"],
+.suggestions-list,
+.autocomplete-dropdown {
+  background-color: #1e2030 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Улучшенные стили для выпадающих списков */
+[data-radix-popper-content-wrapper],
+[role="tooltip"],
+[role="dialog"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

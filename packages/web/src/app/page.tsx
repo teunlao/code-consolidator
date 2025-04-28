@@ -202,7 +202,10 @@ export default function Home() {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-4">
-          <SearchFilter onSearch={handleSearch} />
+          <SearchFilter 
+            onSearch={handleSearch} 
+            filterSettings={activeSettings.filterSettings}
+          />
           
           {filteredTree ? (
             <FileTree 
