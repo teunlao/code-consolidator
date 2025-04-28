@@ -8,12 +8,16 @@ import * as http from 'http';
 // Путь к директории пакета
 const packageDir = path.resolve(__dirname, '../..');
 
-// Используем npx для запуска next - это гарантирует, что мы используем версию, 
-// установленную в нашем пакете, а не у пользователя
-const nextCommand = 'npx';
-
 // Порт для запуска приложения
 const PORT = process.env.PORT || 3333;
+
+// Проверяем, что у нас есть собранные файлы
+const nextDistDir = path.join(packageDir, '.next');
+if (!fs.existsSync(nextDistDir)) {
+  console.error('Error: Build files not found in the package.');
+  console.error('The package may be corrupted or incorrectly installed.');
+  process.exit(1);
+}
 
 // Функция для ожидания запуска сервера
 async function waitForServer(url: string, maxRetries = 30, delay = 500): Promise<void> {
@@ -51,46 +55,29 @@ async function waitForServer(url: string, maxRetries = 30, delay = 500): Promise
 async function startApp() {
   console.log('Starting Code Consolidator UI...');
   
-  // Запускаем сборку приложения
-  try {
-    console.log('Building the application...');
-    
-    const buildProcess = spawn(nextCommand, ['next', 'build'], {
-      cwd: packageDir,
-      stdio: 'inherit',
-      shell: true
-    });
-    
-    await new Promise<void>((resolve, reject) => {
-      buildProcess.on('close', (code) => {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(`Build failed with code ${code}`));
-        }
-      });
-    });
-    
-    console.log('Build completed successfully.');
-  } catch (error) {
-    console.error('Failed to build the application:', error);
-    process.exit(1);
-  }
+  // Запускаем Next.js в production режиме напрямую из директории пакета
+  console.log(`Starting server on port ${PORT}...`);
   
-  // Запускаем Next.js в production режиме
-  console.log(`Starting Next.js on port ${PORT}...`);
-  
-  const appProcess = spawn(nextCommand, ['next', 'start', '--port', PORT.toString()], {
-    cwd: packageDir,
+  // Используем npx next start с путем к .next директории
+  const appProcess = spawn('npx', ['next', 'start', '--port', PORT.toString()], {
+    cwd: packageDir, // Используем директорию пакета
     stdio: 'inherit',
-    shell: true
+    shell: true,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production' // Убедимся, что используется production режим
+    }
   });
   
-  // Ждем запуска сервера
-  await waitForServer(`http://localhost:${PORT}`);
-  
-  console.log(`\n✨ Code Consolidator UI is running at http://localhost:${PORT}`);
-  console.log('Use Ctrl+C to stop the application\n');
+  try {
+    // Ждем запуска сервера
+    await waitForServer(`http://localhost:${PORT}`);
+    
+    console.log(`\n✨ Code Consolidator UI is running at http://localhost:${PORT}`);
+    console.log('Use Ctrl+C to stop the application\n');
+  } catch (error) {
+    console.error('Server did not start correctly:', error);
+  }
   
   // Обработка завершения процесса
   appProcess.on('close', (code) => {
