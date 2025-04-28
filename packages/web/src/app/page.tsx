@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Check, Loader2, RotateCcw } from 'lucide-react';
 import { FileNode } from '@/lib/types';
 import { FilterSettingsButton } from '@/components/filter-settings';
+import { getCookie, setCookie } from '@/lib/utils';
 
-// Ключи для localStorage
-const STORAGE_KEYS = {
+// Ключи для cookie
+const COOKIE_KEYS = {
   INCLUDE_COMMENTS: 'code-consolidator-include-comments',
   NEW_PAGE_FOR_EACH_FILE: 'code-consolidator-new-page-for-each-file',
   OUTPUT_FILE_NAME: 'code-consolidator-output-file-name',
@@ -42,21 +43,21 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [includeComments, setIncludeComments] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.INCLUDE_COMMENTS);
+      const saved = getCookie(COOKIE_KEYS.INCLUDE_COMMENTS);
       return saved ? JSON.parse(saved) : true;
     }
     return true;
   });
   const [newPageForEachFile, setNewPageForEachFile] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.NEW_PAGE_FOR_EACH_FILE);
+      const saved = getCookie(COOKIE_KEYS.NEW_PAGE_FOR_EACH_FILE);
       return saved ? JSON.parse(saved) : true;
     }
     return true;
   });
   const [outputFileName, setOutputFileName] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.OUTPUT_FILE_NAME);
+      const saved = getCookie(COOKIE_KEYS.OUTPUT_FILE_NAME);
       return saved || 'project_code.pdf';
     }
     return 'project_code.pdf';
@@ -69,7 +70,7 @@ export default function Home() {
   // Состояние для настроек фильтрации
   const [filterSettings, setFilterSettings] = useState<FilterSettings>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.FILTER_SETTINGS);
+      const saved = getCookie(COOKIE_KEYS.FILTER_SETTINGS);
       return saved ? JSON.parse(saved) : DEFAULT_FILTER_SETTINGS;
     }
     return DEFAULT_FILTER_SETTINGS;
@@ -90,6 +91,14 @@ export default function Home() {
     try {
       setLoading(true);
       
+      // Если настройки не указаны, проверяем, есть ли они в куках
+      if (!settings && typeof window !== 'undefined') {
+        const savedSettings = getCookie(COOKIE_KEYS.FILTER_SETTINGS);
+        if (savedSettings) {
+          settings = JSON.parse(savedSettings);
+        }
+      }
+      
       let response;
       if (settings) {
         // Если есть настройки, отправляем их через POST
@@ -102,6 +111,9 @@ export default function Home() {
             filterSettings: settings
           }),
         });
+        
+        // Обновляем состояние filterSettings в компоненте
+        setFilterSettings(settings);
       } else {
         // Иначе используем GET без параметров
         response = await fetch('/api/file-tree');
@@ -119,28 +131,31 @@ export default function Home() {
     }
   }
   
-  // Сохраняем настройки в localStorage при их изменении
+  // Сохраняем настройки в куки при их изменении
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.INCLUDE_COMMENTS, JSON.stringify(includeComments));
+      setCookie(COOKIE_KEYS.INCLUDE_COMMENTS, JSON.stringify(includeComments));
     }
   }, [includeComments]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.NEW_PAGE_FOR_EACH_FILE, JSON.stringify(newPageForEachFile));
+      setCookie(COOKIE_KEYS.NEW_PAGE_FOR_EACH_FILE, JSON.stringify(newPageForEachFile));
     }
   }, [newPageForEachFile]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.OUTPUT_FILE_NAME, outputFileName);
+      setCookie(COOKIE_KEYS.OUTPUT_FILE_NAME, outputFileName);
     }
   }, [outputFileName]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.FILTER_SETTINGS, JSON.stringify(filterSettings));
+      setCookie(COOKIE_KEYS.FILTER_SETTINGS, JSON.stringify(filterSettings));
+      
+      // Важно: перезагружаем дерево файлов при изменении настроек фильтрации
+      fetchFileTree(filterSettings);
     }
   }, [filterSettings]);
 
@@ -151,10 +166,22 @@ export default function Home() {
   
   // Функция для сброса всех настроек до дефолтных значений
   const resetAllSettings = () => {
+    // Сбрасываем состояния
     setIncludeComments(true);
     setNewPageForEachFile(true);
     setOutputFileName('project_code.pdf');
     setFilterSettings(DEFAULT_FILTER_SETTINGS);
+    
+    // Сбрасываем куки (если мы в браузере)
+    if (typeof window !== 'undefined') {
+      setCookie(COOKIE_KEYS.INCLUDE_COMMENTS, JSON.stringify(true));
+      setCookie(COOKIE_KEYS.NEW_PAGE_FOR_EACH_FILE, JSON.stringify(true));
+      setCookie(COOKIE_KEYS.OUTPUT_FILE_NAME, 'project_code.pdf');
+      setCookie(COOKIE_KEYS.FILTER_SETTINGS, JSON.stringify(DEFAULT_FILTER_SETTINGS));
+      
+      // Перезагружаем дерево файлов с новыми настройками
+      fetchFileTree(DEFAULT_FILTER_SETTINGS);
+    }
   };
   
   // Функция для обновления выбранных файлов в дереве
