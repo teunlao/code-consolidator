@@ -6,9 +6,17 @@ import { ConfigPanel } from '@/components/config-panel';
 import { SearchFilter } from '@/components/search-filter';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, RotateCcw } from 'lucide-react';
 import { FileNode } from '@/lib/types';
 import { FilterSettingsButton } from '@/components/filter-settings';
+
+// Ключи для localStorage
+const STORAGE_KEYS = {
+  INCLUDE_COMMENTS: 'code-consolidator-include-comments',
+  NEW_PAGE_FOR_EACH_FILE: 'code-consolidator-new-page-for-each-file',
+  OUTPUT_FILE_NAME: 'code-consolidator-output-file-name',
+  FILTER_SETTINGS: 'code-consolidator-filter-settings',
+};
 
 // Интерфейс для настроек фильтрации
 interface FilterSettings {
@@ -19,25 +27,52 @@ interface FilterSettings {
   useDefaultIgnores: boolean;
 }
 
+// Дефолтные настройки фильтрации
+const DEFAULT_FILTER_SETTINGS: FilterSettings = {
+  ignoredDirectories: [],
+  ignoredFiles: [],
+  ignoredExtensions: [],
+  allowedExtensions: [],
+  useDefaultIgnores: true,
+};
+
 export default function Home() {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [includeComments, setIncludeComments] = useState(true);
-  const [newPageForEachFile, setNewPageForEachFile] = useState(true);
-  const [outputFileName, setOutputFileName] = useState('project_code.pdf');
+  const [includeComments, setIncludeComments] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEYS.INCLUDE_COMMENTS);
+      return saved ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
+  const [newPageForEachFile, setNewPageForEachFile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEYS.NEW_PAGE_FOR_EACH_FILE);
+      return saved ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
+  const [outputFileName, setOutputFileName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEYS.OUTPUT_FILE_NAME);
+      return saved || 'project_code.pdf';
+    }
+    return 'project_code.pdf';
+  });
   const [generating, setGenerating] = useState(false);
   const [generatedPdfPath, setGeneratedPdfPath] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [selectedFilesCount, setSelectedFilesCount] = useState(0);
   
   // Состояние для настроек фильтрации
-  const [filterSettings, setFilterSettings] = useState<FilterSettings>({
-    ignoredDirectories: [],
-    ignoredFiles: [],
-    ignoredExtensions: [],
-    allowedExtensions: [],
-    useDefaultIgnores: true,
+  const [filterSettings, setFilterSettings] = useState<FilterSettings>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEYS.FILTER_SETTINGS);
+      return saved ? JSON.parse(saved) : DEFAULT_FILTER_SETTINGS;
+    }
+    return DEFAULT_FILTER_SETTINGS;
   });
   
   // Загрузка дерева файлов
@@ -84,9 +119,42 @@ export default function Home() {
     }
   }
   
+  // Сохраняем настройки в localStorage при их изменении
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.INCLUDE_COMMENTS, JSON.stringify(includeComments));
+    }
+  }, [includeComments]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.NEW_PAGE_FOR_EACH_FILE, JSON.stringify(newPageForEachFile));
+    }
+  }, [newPageForEachFile]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.OUTPUT_FILE_NAME, outputFileName);
+    }
+  }, [outputFileName]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.FILTER_SETTINGS, JSON.stringify(filterSettings));
+    }
+  }, [filterSettings]);
+
   // Функция для обновления настроек фильтрации
   const handleFilterSettingsChange = (newSettings: FilterSettings) => {
     setFilterSettings(newSettings);
+  };
+  
+  // Функция для сброса всех настроек до дефолтных значений
+  const resetAllSettings = () => {
+    setIncludeComments(true);
+    setNewPageForEachFile(true);
+    setOutputFileName('project_code.pdf');
+    setFilterSettings(DEFAULT_FILTER_SETTINGS);
   };
   
   // Функция для обновления выбранных файлов в дереве
@@ -259,12 +327,28 @@ export default function Home() {
         </div>
         
         <div className="space-y-4">
-          {/* Кнопка настройки фильтрации теперь справа */}
-          <div className="border rounded-md p-4">
-            <FilterSettingsButton 
-              settings={filterSettings}
-              onSettingsChange={handleFilterSettingsChange}
-            />
+          {/* Блок с настройками фильтрации и кнопкой сброса */}
+          <div className="border rounded-md p-4 space-y-3">
+            {/* Кнопка сброса над кнопкой фильтрации */}
+            <div className="w-full">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetAllSettings}
+                title="Сбросить все настройки"
+                className="w-full"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" /> Сбросить
+              </Button>
+            </div>
+            
+            {/* Кнопка настройки фильтрации */}
+            <div className="w-full">
+              <FilterSettingsButton 
+                settings={filterSettings}
+                onSettingsChange={handleFilterSettingsChange}
+              />
+            </div>
           </div>
           
           <ConfigPanel 
