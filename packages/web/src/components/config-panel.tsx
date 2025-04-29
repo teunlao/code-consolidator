@@ -1,12 +1,14 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { OpenFileButton } from "./open-file-button";
+import { List } from "lucide-react";
+import { BulkSelectDialog } from "./bulk-select-dialog";
 
 interface ConfigPanelProps {
   includeComments: boolean;
@@ -18,6 +20,7 @@ interface ConfigPanelProps {
   onGenerate: () => void;
   selectedFilesCount: number;
   lastGeneratedPdfPath?: string;
+  onBulkSelectPaths?: (paths: string[]) => void;
 }
 
 export function ConfigPanel({
@@ -29,11 +32,22 @@ export function ConfigPanel({
   onOutputFileNameChange,
   onGenerate,
   selectedFilesCount,
-  lastGeneratedPdfPath
+  lastGeneratedPdfPath,
+  onBulkSelectPaths
 }: ConfigPanelProps) {
+  // Состояние для отображения диалога массового выбора файлов
+  const [bulkSelectOpen, setBulkSelectOpen] = useState<boolean>(false);
+  
   // Определяем путь для вывода файла (для использования в кнопке открытия)
   // Используем только существующий путь, если он есть
   const pdfPath = lastGeneratedPdfPath || '';
+  
+  // Обработчик для применения выбранных путей
+  const handleApplyPaths = (paths: string[]) => {
+    if (onBulkSelectPaths && paths.length > 0) {
+      onBulkSelectPaths(paths);
+    }
+  };
   return (
     <div className="border border-gray-700 rounded-md p-4 space-y-4 bg-gray-800">
       <h2 className="text-lg font-semibold text-gray-100">Настройки генерации</h2>
@@ -71,7 +85,20 @@ export function ConfigPanel({
         </div>
       </div>
       
-      <div className="pt-2">
+      <div className="pt-2 space-y-2">
+        {/* Кнопка для выбора файлов через текстовый список */}
+        {onBulkSelectPaths && (
+          <Button 
+            variant="outline" 
+            type="button"
+            onClick={() => setBulkSelectOpen(true)}
+            className="w-full bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200"
+          >
+            <List className="w-4 h-4 mr-2" />
+            Выбрать файлы из списка путей
+          </Button>
+        )}
+        
         <div className="flex gap-2">
           <Button 
             onClick={onGenerate}
@@ -97,6 +124,15 @@ export function ConfigPanel({
           )}
         </div>
       </div>
+      
+      {/* Диалог для массового выбора файлов */}
+      {onBulkSelectPaths && (
+        <BulkSelectDialog
+          isOpen={bulkSelectOpen}
+          onClose={() => setBulkSelectOpen(false)}
+          onApplyPaths={handleApplyPaths}
+        />
+      )}
     </div>
   );
 }
