@@ -19,6 +19,8 @@ export interface Profile {
   settings: ProjectSettings;
   createdAt: number;
   updatedAt: number;
+  // Новое свойство для явного переопределения настроек
+  overrides: Partial<Record<keyof ProjectSettings, boolean>>;
 }
 
 export interface Project {
@@ -65,6 +67,9 @@ interface ProjectState {
   createProfile: (projectId: string, name: string, description?: string, inheritFromProject?: boolean) => Profile;
   updateProfile: (projectId: string, profileId: string, updates: Partial<Profile>) => void;
   deleteProfile: (projectId: string, profileId: string) => void;
+  
+  // Новый метод для копирования профиля
+  copyProfile: (projectId: string, profileId: string, newName?: string) => Profile;
 
   setActiveProject: (projectId?: string) => void;
   setActiveProfile: (profileId?: string) => void;
@@ -100,12 +105,27 @@ export const useProjectsStore = create<ProjectState>()(
         return activeProject.profiles.find((p) => p.id === activeProfileId);
       },
 
+      // Обновленный метод для получения настроек с наследованием от базового профиля
       getActiveSettings: () => {
         const activeProfile = get().getActiveProfile();
         const activeProject = get().getActiveProject();
 
-        if (activeProfile) {
-          return activeProfile.settings;
+        if (activeProfile && activeProject) {
+          // Объединяем базовые настройки с настройками профиля
+          // В настройках профиля содержатся только явно переопределенные настройки
+          const mergedSettings = { ...activeProject.baseSettings };
+          
+          // Применяем только те настройки из профиля, которые явно переопределены
+          // или не имеют флага переопределения (для обратной совместимости)
+          Object.keys(activeProfile.settings).forEach(key => {
+            const settingKey = key as keyof ProjectSettings;
+            if (!activeProfile.overrides || activeProfile.overrides[settingKey]) {
+              // @ts-ignore - динамический доступ к полям
+              mergedSettings[settingKey] = activeProfile.settings[settingKey];
+            }
+          });
+          
+          return mergedSettings;
         }
 
         if (activeProject) {
@@ -165,8 +185,13 @@ export const useProjectsStore = create<ProjectState>()(
         const { projects } = get();
         const project = projects.find((p) => p.id === projectId);
 
-        const settings = inheritFromProject && project ? { ...project.baseSettings } : { ...DEFAULT_PROJECT_SETTINGS };
+        // При создании профиля с наследованием, устанавливаем только базовые настройки
+        // Теперь профиль наследует изменения в базовых настройках автоматически
+        const settings = inheritFromProject && project 
+          ? { ...project.baseSettings } 
+          : { ...DEFAULT_PROJECT_SETTINGS };
 
+        // Создаем новый профиль с пустым overrides
         const newProfile: Profile = {
           id: uuidv4(),
           name,
@@ -174,6 +199,7 @@ export const useProjectsStore = create<ProjectState>()(
           settings,
           createdAt: Date.now(),
           updatedAt: Date.now(),
+          overrides: {} // Пустой объект переопределений
         };
 
         set((state) => ({
@@ -233,6 +259,51 @@ export const useProjectsStore = create<ProjectState>()(
           return updatedState as ProjectState;
         });
       },
+      
+      // Метод для копирования профиля
+      copyProfile: (projectId, profileId) => {
+        const { projects } = get();
+        const project = projects.find(p => p.id === projectId);
+        
+        if (!project) {
+          throw new Error('Проект не найден');
+        }
+        
+        const sourceProfile = project.profiles.find(p => p.id === profileId);
+        
+        if (!sourceProfile) {
+          throw new Error('Профиль не найден');
+        }
+        
+        // Создаем копию профиля с новым ID
+        const copyName = `${sourceProfile.name} (копия)`;
+        
+        const newProfile: Profile = {
+          id: uuidv4(),
+          name: copyName,
+          description: sourceProfile.description,
+          settings: { ...sourceProfile.settings },
+          overrides: { ...sourceProfile.overrides },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        
+        set((state) => ({
+          projects: state.projects.map((p) => {
+            if (p.id === projectId) {
+              return {
+                ...p,
+                profiles: [...p.profiles, newProfile],
+                updatedAt: Date.now(),
+              };
+            }
+            return p;
+          }),
+          activeProfileId: newProfile.id, // Сразу активируем скопированный профиль
+        }));
+        
+        return newProfile;
+      },
 
       // Управление активными выборами
       setActiveProject: (projectId) => {
@@ -253,9 +324,18 @@ export const useProjectsStore = create<ProjectState>()(
         const activeProject = get().getActiveProject();
 
         if (activeProfile && activeProjectId) {
-          // Обновляем настройки в активном профиле
+          // Обновляем настройки в активном профиле и помечаем их как переопределенные
+          const updatedOverrides = { ...activeProfile.overrides };
+          
+          // Отмечаем все обновляемые поля как переопределенные
+          Object.keys(updates).forEach(key => {
+            const settingKey = key as keyof ProjectSettings;
+            updatedOverrides[settingKey] = true;
+          });
+          
           get().updateProfile(activeProjectId, activeProfile.id, {
             settings: { ...activeProfile.settings, ...updates },
+            overrides: updatedOverrides
           });
         } else if (activeProject) {
           // Обновляем базовые настройки проекта

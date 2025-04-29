@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Check, ChevronDown, FilePlus, FolderPlus, Pencil, Trash2, Layers } from 'lucide-react';
+import { Check, ChevronDown, FilePlus, FolderPlus, Pencil, Trash2, Layers, Copy } from 'lucide-react';
 import { useProjectsStore, Project, Profile } from '@/lib/stores/projects-store';
 
 // Компонент для отображения выбранного проекта и профиля
@@ -32,7 +32,8 @@ export function ProjectSelector() {
     updateProject,
     updateProfile,
     deleteProject,
-    deleteProfile
+    deleteProfile,
+    copyProfile: storeCopyProfile
   } = useProjectsStore();
   
   const activeProject = getActiveProject();
@@ -184,6 +185,17 @@ export function ProjectSelector() {
                     >
                       <Pencil className="h-4 w-4 mr-2" />
                       Редактировать профиль
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="flex items-center cursor-pointer hover:bg-gray-700"
+                      onClick={() => {
+                        if (activeProject) {
+                          storeCopyProfile(activeProject.id, activeProfile.id);
+                        }
+                      }}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Копировать профиль
                     </DropdownMenuItem>
                   </>
                 )}
