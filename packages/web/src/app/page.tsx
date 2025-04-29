@@ -338,6 +338,7 @@ export default function Home() {
             selectedFilesCount={selectedFilesCount}
             lastGeneratedPdfPath={generatedPdfPath}
             onBulkSelectPaths={handleBulkSelectPaths}
+            selectedFiles={fileTree ? getSelectedFilePaths(fileTree) : []}
           />
         </div>
       </div>

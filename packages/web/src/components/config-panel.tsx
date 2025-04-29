@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { OpenFileButton } from "./open-file-button";
-import { List } from "lucide-react";
+import { List, FileOutput } from "lucide-react";
+import { ExportPathsDialog } from "./export-paths-dialog";
 import { BulkSelectDialog } from "./bulk-select-dialog";
 
 interface ConfigPanelProps {
@@ -23,6 +24,7 @@ interface ConfigPanelProps {
   selectedFilesCount: number;
   lastGeneratedPdfPath?: string;
   onBulkSelectPaths?: (paths: string[]) => void;
+  selectedFiles?: string[]; // Добавлено: массив выбранных файлов для экспорта
 }
 
 export function ConfigPanel({
@@ -37,10 +39,12 @@ export function ConfigPanel({
   onGenerate,
   selectedFilesCount,
   lastGeneratedPdfPath,
-  onBulkSelectPaths
+  onBulkSelectPaths,
+  selectedFiles = []
 }: ConfigPanelProps) {
-  // Состояние для отображения диалога массового выбора файлов
+  // Состояние для отображения диалогов
   const [bulkSelectOpen, setBulkSelectOpen] = useState<boolean>(false);
+  const [exportPathsOpen, setExportPathsOpen] = useState<boolean>(false);
   
   // Определяем путь для вывода файла (для использования в кнопке открытия)
   // Используем только существующий путь, если он есть
@@ -113,6 +117,19 @@ export function ConfigPanel({
           </Button>
         )}
         
+        {/* Кнопка экспорта списка выбранных файлов */}
+        {selectedFilesCount > 0 && (
+          <Button 
+            variant="outline" 
+            type="button"
+            onClick={() => setExportPathsOpen(true)}
+            className="w-full bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200"
+          >
+            <FileOutput className="w-4 h-4 mr-2" />
+            Экспортировать пути выбранных файлов ({selectedFilesCount})
+          </Button>
+        )}
+        
         <div className="flex gap-2">
           <Button 
             onClick={onGenerate}
@@ -147,6 +164,13 @@ export function ConfigPanel({
           onApplyPaths={handleApplyPaths}
         />
       )}
+      
+      {/* Диалог для экспорта путей */}
+      <ExportPathsDialog 
+        isOpen={exportPathsOpen}
+        onClose={() => setExportPathsOpen(false)}
+        paths={selectedFiles}
+      />
     </div>
   );
 }
