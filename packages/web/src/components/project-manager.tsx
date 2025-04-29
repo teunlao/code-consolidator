@@ -145,7 +145,10 @@ export function ProjectSelector() {
                 <DropdownMenuSeparator className="bg-gray-700" />
                 <DropdownMenuItem 
                   className="flex items-center cursor-pointer hover:bg-gray-700"
-                  onClick={() => setActiveProfile(undefined)}
+                  onClick={() => {
+                    // Принудительно обновляем состояние (по умолчанию при установке undefined)
+                    setActiveProfile(undefined);
+                  }}
                 >
                   {!activeProfile && (
                     <Check className="h-4 w-4 mr-2 text-green-400" />
@@ -159,7 +162,10 @@ export function ProjectSelector() {
                   <DropdownMenuItem 
                     key={profile.id}
                     className="flex items-center cursor-pointer hover:bg-gray-700"
-                    onClick={() => setActiveProfile(profile.id)}
+                    onClick={() => {
+                      // Принудительно обновляем состояние при выборе профиля
+                      setActiveProfile(profile.id);
+                    }}
                   >
                     {activeProfileId === profile.id && (
                       <Check className="h-4 w-4 mr-2 text-green-400" />

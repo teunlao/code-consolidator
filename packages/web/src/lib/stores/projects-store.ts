@@ -115,13 +115,20 @@ export const useProjectsStore = create<ProjectState>()(
           // В настройках профиля содержатся только явно переопределенные настройки
           const mergedSettings = { ...activeProject.baseSettings };
           
-          // Применяем только те настройки из профиля, которые явно переопределены
-          // или не имеют флага переопределения (для обратной совместимости)
+          // Особая обработка для selectedFiles - массив должен быть либо полностью переопределен,
+          // либо полностью наследован - частичное слияние массивов не имеет смысла
           Object.keys(activeProfile.settings).forEach(key => {
             const settingKey = key as keyof ProjectSettings;
+            // Если настройка явно переопределена или нет информации о переопределении (обратная совместимость)
             if (!activeProfile.overrides || activeProfile.overrides[settingKey]) {
-              // @ts-ignore - динамический доступ к полям
-              mergedSettings[settingKey] = activeProfile.settings[settingKey];
+              if (settingKey === 'selectedFiles') {
+                // Полностью заменяем массив выбранных файлов
+                mergedSettings.selectedFiles = [...activeProfile.settings.selectedFiles];
+              } else {
+                // Для других полей используем значение из профиля
+                // @ts-ignore - динамический доступ к полям
+                mergedSettings[settingKey] = activeProfile.settings[settingKey];
+              }
             }
           });
           
@@ -331,6 +338,16 @@ export const useProjectsStore = create<ProjectState>()(
           Object.keys(updates).forEach(key => {
             const settingKey = key as keyof ProjectSettings;
             updatedOverrides[settingKey] = true;
+            
+            // Особая обработка для selectedFiles - всегда создаем новый массив
+            if (settingKey === 'selectedFiles' && 'selectedFiles' in updates) {
+              // Для обратной совместимости проверяем существование массива
+              const selectedFiles = updates.selectedFiles || [];
+              updates = { 
+                ...updates, 
+                selectedFiles: [...selectedFiles] 
+              };
+            }
           });
           
           get().updateProfile(activeProjectId, activeProfile.id, {
@@ -347,24 +364,32 @@ export const useProjectsStore = create<ProjectState>()(
 
       // Применение выбранных файлов к дереву
       applySelectedFilesToTree: (fileTree, selectedFiles) => {
+        // Создаем новый Set для быстрого поиска
         const filesSet = new Set(selectedFiles);
+        
+        // Сначала выполняем глубокое клонирование дерева, чтобы избежать мутаций
+        const clonedTree = structuredClone(fileTree) as FileNode;
 
         // Рекурсивно обходим дерево и проставляем selected: true для указанных файлов
         const updateSelection = (node: FileNode): FileNode => {
-          const selected = filesSet.has(node.path);
-
-          // Если это файл, просто обновляем выбор
+          // Для файлов - просто проверяем наличие пути в списке выбранных
           if (node.type === 'file') {
-            return { ...node, selected };
+            return { 
+              ...node, 
+              selected: filesSet.has(node.path)
+            };
           }
 
-          // Если это директория, рекурсивно обрабатываем дочерние элементы
+          // Для директорий - обрабатываем дочерние элементы
           if (node.children) {
-            const updatedChildren = node.children.map((child) => updateSelection(child));
-
-            // Директория считается выбранной, если все ее дочерние элементы выбраны
-            const allChildrenSelected = updatedChildren.length > 0 && updatedChildren.every((child) => child.selected);
-
+            // Сначала обновляем всех детей
+            const updatedChildren = node.children.map(child => updateSelection(child));
+            
+            // Директория считается выбранной, если все её дочерние элементы выбраны
+            const allChildrenSelected = 
+              updatedChildren.length > 0 && 
+              updatedChildren.every(child => child.selected);
+            
             return {
               ...node,
               selected: allChildrenSelected,
@@ -372,10 +397,11 @@ export const useProjectsStore = create<ProjectState>()(
             };
           }
 
-          return node;
+          return { ...node, selected: false };
         };
 
-        return updateSelection(fileTree);
+        // Применяем обновление выбора к клонированному дереву
+        return updateSelection(clonedTree);
       },
     }),
     {

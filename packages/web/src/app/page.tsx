@@ -32,8 +32,12 @@ export default function Home() {
 
   // Храним информацию о том, была ли первая загрузка
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  
+  // Получаем идентификаторы активных проекта и профиля для отслеживания изменений
+  const { activeProjectId, activeProfileId } = useProjectsStore();
 
-  // Загрузка дерева файлов при инициализации или изменении настроек фильтрации
+  // Загрузка дерева файлов при инициализации, изменении настроек фильтрации
+  // или при переключении между профилями
   useEffect(() => {
     const isFirstLoad = !initialLoadDone;
     fetchFileTree(activeSettings.filterSettings, isFirstLoad);
@@ -41,7 +45,13 @@ export default function Home() {
     if (!initialLoadDone) {
       setInitialLoadDone(true);
     }
-  }, [activeSettings.filterSettings, initialLoadDone]);
+  }, [
+    activeSettings.filterSettings, 
+    initialLoadDone, 
+    // Теперь эффект будет срабатывать при смене профиля или проекта
+    activeProjectId, 
+    activeProfileId
+  ]);
 
   // Функция для загрузки дерева файлов
   async function fetchFileTree(filterSettings: FilterSettings, isInitialLoad = false) {
@@ -49,6 +59,12 @@ export default function Home() {
       // Устанавливаем лоадер только при первой загрузке, но не при смене профиля/проекта
       if (isInitialLoad) {
         setLoading(true);
+      }
+
+      // Сначала очищаем текущее дерево при смене профиля
+      // Это необходимо, чтобы гарантировать, что старые выбранные файлы не сохранятся
+      if (!isInitialLoad) {
+        setFileTree(null);
       }
 
       const response = await fetch('/api/file-tree', {
@@ -64,10 +80,14 @@ export default function Home() {
       const data = await response.json();
 
       if (data.fileTree) {
+        // Явно получаем самые актуальные настройки для текущего профиля
+        // Это особенно важно при переключении между профилями
+        const currentSettings = getActiveSettings();
+        
         // Применяем сохраненные выбранные файлы к полученному дереву
         const treeWithSelection =
-          activeSettings.selectedFiles.length > 0
-            ? applySelectedFilesToTree(data.fileTree, activeSettings.selectedFiles)
+          currentSettings.selectedFiles.length > 0
+            ? applySelectedFilesToTree(data.fileTree, currentSettings.selectedFiles)
             : data.fileTree;
 
         setFileTree(treeWithSelection);
@@ -170,7 +190,7 @@ export default function Home() {
     }
 
     // Создаем копию текущего дерева файлов
-    let updatedTree = JSON.parse(JSON.stringify(fileTree)) as FileNode;
+    let updatedTree = structuredClone(fileTree) as FileNode;
     let successfullyMatched = 0;
     const notFoundPaths: string[] = [];
 
