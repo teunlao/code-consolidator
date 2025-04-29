@@ -1,15 +1,36 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process';
-import * as path from 'path';
 import * as fs from 'fs';
 import * as http from 'http';
+import * as path from 'path';
 
 // Путь к директории пакета
 const packageDir = path.resolve(__dirname, '../..');
 
+// Парсим аргументы командной строки для порта
+function parsePort(): number {
+  const args = process.argv.slice(2);
+  let port = 3333; // Порт по умолчанию
+
+  // Ищем параметр --port или -p
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '--port' || args[i] === '-p') && i + 1 < args.length) {
+      const portArg = Number.parseInt(args[i + 1], 10);
+      if (!Number.isNaN(portArg) && portArg > 0 && portArg < 65536) {
+        port = portArg;
+      } else {
+        console.warn(`Invalid port number: ${args[i + 1]}. Using default port 3333.`);
+      }
+      break;
+    }
+  }
+
+  return port;
+}
+
 // Порт для запуска приложения
-const PORT = process.env.PORT || 3333;
+const PORT = parsePort() || 3333;
 
 // Проверяем, что у нас есть собранные файлы
 const nextDistDir = path.join(packageDir, '.next');
@@ -22,7 +43,7 @@ if (!fs.existsSync(nextDistDir)) {
 // Функция для ожидания запуска сервера
 async function waitForServer(url: string, maxRetries = 30, delay = 500): Promise<void> {
   let retries = 0;
-  
+
   while (retries < maxRetries) {
     try {
       await new Promise<void>((resolve, reject) => {
@@ -33,35 +54,35 @@ async function waitForServer(url: string, maxRetries = 30, delay = 500): Promise
             reject(new Error(`Server responded with status code ${res.statusCode}`));
           }
         });
-        
+
         req.on('error', (err) => {
           reject(err);
         });
-        
+
         req.end();
       });
-      
+
       return;
     } catch (error) {
       retries++;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  
+
   throw new Error(`Server failed to start after ${maxRetries} retries`);
 }
 
 // Функция для запуска Next.js приложения
 async function startApp() {
   console.log('Starting Code Consolidator UI...');
-  
+
   // Запускаем Next.js в production режиме напрямую из директории пакета
   console.log(`Starting server on port ${PORT}...`);
-  
+
   // Сохраняем директорию пользователя
   const userProjectDir = process.cwd();
   console.log(`User project directory: ${userProjectDir}`);
-  
+
   // Используем npx next start с путем к .next директории
   const appProcess = spawn('npx', ['next', 'start', '--port', PORT.toString()], {
     cwd: packageDir, // Используем директорию пакета для запуска next
@@ -70,32 +91,32 @@ async function startApp() {
     env: {
       ...process.env,
       NODE_ENV: 'production', // Убедимся, что используется production режим
-      USER_PROJECT_DIR: userProjectDir // Передаем директорию пользователя как переменную окружения
-    }
+      USER_PROJECT_DIR: userProjectDir, // Передаем директорию пользователя как переменную окружения
+    },
   });
-  
+
   try {
     // Ждем запуска сервера
     await waitForServer(`http://localhost:${PORT}`);
-    
+
     console.log(`\n✨ Code Consolidator UI is running at http://localhost:${PORT}`);
     console.log('Use Ctrl+C to stop the application\n');
   } catch (error) {
     console.error('Server did not start correctly:', error);
   }
-  
+
   // Обработка завершения процесса
   appProcess.on('close', (code) => {
     console.log(`Code Consolidator UI stopped with code ${code}`);
     process.exit(code || 0);
   });
-  
+
   // Обработка сигналов завершения
   process.on('SIGINT', () => {
     console.log('\nStopping Code Consolidator UI...');
     appProcess.kill('SIGINT');
   });
-  
+
   process.on('SIGTERM', () => {
     console.log('\nStopping Code Consolidator UI...');
     appProcess.kill('SIGTERM');
