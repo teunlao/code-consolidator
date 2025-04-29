@@ -1,6 +1,6 @@
 {
   "name": "@teunlao/code-consolidator",
-  "version": "0.9.5",
+  "version": "0.10.0",
   "private": false,
   "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF documentation.",
   "keywords": [
