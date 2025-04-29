@@ -6,13 +6,15 @@ interface GeneratePdfOptions {
   outputFile: string;
   includeComments: boolean;
   newPageForEachFile: boolean;
+  useAbsolutePaths: boolean; // Новый параметр
 }
 
 export async function generatePdf({
   files,
   outputFile,
   includeComments,
-  newPageForEachFile
+  newPageForEachFile,
+  useAbsolutePaths
 }: GeneratePdfOptions): Promise<string> {
   try {
     // Обеспечиваем правильное расширение файла
@@ -34,7 +36,8 @@ export async function generatePdf({
       inputFiles: files,
       outputFile: absoluteOutputPath,
       includeComments,
-      newPageForEachFile
+      newPageForEachFile,
+      useAbsolutePaths
     });
     
     // Генерируем PDF

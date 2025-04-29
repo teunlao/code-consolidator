@@ -15,6 +15,8 @@ interface ConfigPanelProps {
   onIncludeCommentsChange: (value: boolean) => void;
   newPageForEachFile: boolean;
   onNewPageForEachFileChange: (value: boolean) => void;
+  useAbsolutePaths: boolean;
+  onUseAbsolutePathsChange: (value: boolean) => void;
   outputFileName: string;
   onOutputFileNameChange: (value: string) => void;
   onGenerate: () => void;
@@ -28,6 +30,8 @@ export function ConfigPanel({
   onIncludeCommentsChange,
   newPageForEachFile,
   onNewPageForEachFileChange,
+  useAbsolutePaths,
+  onUseAbsolutePathsChange,
   outputFileName,
   onOutputFileNameChange,
   onGenerate,
@@ -69,6 +73,16 @@ export function ConfigPanel({
             id="new-page" 
             checked={newPageForEachFile} 
             onCheckedChange={onNewPageForEachFileChange}
+            className="data-[state=checked]:bg-blue-600"
+          />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <Label htmlFor="absolute-paths" className="text-gray-200">Использовать абсолютные пути в PDF</Label>
+          <Switch 
+            id="absolute-paths" 
+            checked={useAbsolutePaths} 
+            onCheckedChange={onUseAbsolutePathsChange}
             className="data-[state=checked]:bg-blue-600"
           />
         </div>

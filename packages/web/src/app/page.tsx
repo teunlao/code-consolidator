@@ -162,6 +162,7 @@ export default function Home() {
           outputFile: activeSettings.outputFileName,
           includeComments: activeSettings.includeComments,
           newPageForEachFile: activeSettings.newPageForEachFile,
+          useAbsolutePaths: activeSettings.useAbsolutePaths,
         }),
       });
 
@@ -329,6 +330,8 @@ export default function Home() {
             onIncludeCommentsChange={(value) => updateActiveSettings({ includeComments: value })}
             newPageForEachFile={activeSettings.newPageForEachFile}
             onNewPageForEachFileChange={(value) => updateActiveSettings({ newPageForEachFile: value })}
+            useAbsolutePaths={activeSettings.useAbsolutePaths}
+            onUseAbsolutePathsChange={(value) => updateActiveSettings({ useAbsolutePaths: value })}
             outputFileName={activeSettings.outputFileName}
             onOutputFileNameChange={(value) => updateActiveSettings({ outputFileName: value })}
             onGenerate={handleGeneratePdf}

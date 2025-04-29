@@ -8,6 +8,7 @@ export interface ProjectSettings {
   includeComments: boolean;
   newPageForEachFile: boolean;
   outputFileName: string;
+  useAbsolutePaths: boolean; // Новое свойство для использования абсолютных путей
   filterSettings: FilterSettings;
   selectedFiles: string[]; // Пути к выбранным файлам
 }
@@ -38,6 +39,7 @@ export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   includeComments: true,
   newPageForEachFile: true,
   outputFileName: 'project_code.pdf',
+  useAbsolutePaths: true, // Абсолютные пути включены по умолчанию
   filterSettings: {
     ignoredDirectories: [],
     ignoredFiles: [],

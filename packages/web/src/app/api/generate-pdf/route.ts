@@ -3,7 +3,7 @@ import { generatePdf } from '@/server/generate-pdf';
 
 export async function POST(request: Request) {
   try {
-    const { files, outputFile, includeComments, newPageForEachFile } = await request.json();
+    const { files, outputFile, includeComments, newPageForEachFile, useAbsolutePaths } = await request.json();
     
     if (!files || !Array.isArray(files) || files.length === 0) {
       return NextResponse.json(
@@ -16,7 +16,8 @@ export async function POST(request: Request) {
       files,
       outputFile: outputFile || 'project_code.pdf',
       includeComments: includeComments ?? true,
-      newPageForEachFile: newPageForEachFile ?? true
+      newPageForEachFile: newPageForEachFile ?? true,
+      useAbsolutePaths: useAbsolutePaths ?? true
     });
     
     return NextResponse.json({ success: true, pdfPath });

@@ -26,6 +26,7 @@ export interface ConsolidatorConfig {
   outputFile: string;
   includeComments?: boolean;
   newPageForEachFile?: boolean;
+  useAbsolutePaths?: boolean; // Новый параметр
   ignorePaths?: (string | RegExp)[];
 }
 
@@ -105,7 +106,9 @@ export async function combineFiles(config: ConsolidatorConfig): Promise<void> {
     }
 
     const fileContent = readFileContent(absolutePath, config.includeComments);
-    doc.fontSize(14).text(`Content of ${relativePath}`, { underline: true });
+    // Используем абсолютный или относительный путь в зависимости от настройки
+    const displayPath = config.useAbsolutePaths ? absolutePath : relativePath;
+    doc.fontSize(14).text(`Content of ${displayPath}`, { underline: true });
     doc.moveDown();
     doc.fontSize(10).text(fileContent);
 
