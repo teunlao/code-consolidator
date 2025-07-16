@@ -258,7 +258,7 @@ export default function Home() {
       return node;
     }
 
-    if (node.children) {
+    if (node.children && node.children.length > 0) {
       const filteredChildren = node.children.map((child) => filterTree(child)).filter(Boolean) as FileNode[];
 
       if (filteredChildren.length > 0) {
