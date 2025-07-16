@@ -133,10 +133,12 @@ export default function Home() {
     const updatedTree = updateNodeSelection(fileTree, path, selected);
     setFileTree(updatedTree);
 
-    // Получаем и сохраняем выбранные файлы
     const selectedFiles = getSelectedFilePaths(updatedTree);
+    
+    // Сбрасываем имя файла и обновляем список выбранных файлов одним вызовом
     updateActiveSettings({
       selectedFiles,
+      outputFileName: '', // Сброс имени файла
     });
 
     // Обновляем счетчик выбранных файлов
@@ -267,6 +269,13 @@ export default function Home() {
     return null;
   };
 
+  // Функция для установки имени файла из названия папки
+  const handleSetOutputNameFromFolder = (folderName: string) => {
+    const extension = activeSettings.outputFormat === 'pdf' ? '.pdf' : '.md';
+    const sanitizedName = folderName.replace(/[^a-zA-Z0-9_-]/g, '_'); // Очистка имени
+    updateActiveSettings({ outputFileName: `${sanitizedName}${extension}` });
+  };
+
   const filteredTree = fileTree && searchQuery ? filterTree(fileTree) : fileTree;
 
   if (loading) {
@@ -293,7 +302,7 @@ export default function Home() {
           <SearchFilter onSearch={handleSearch} filterSettings={activeSettings.filterSettings} />
 
           {filteredTree ? (
-            <FileTree data={filteredTree} onSelect={handleSelectNode} searchQuery={searchQuery} />
+            <FileTree data={filteredTree} onSelect={handleSelectNode} searchQuery={searchQuery} onSetOutputNameFromFolder={handleSetOutputNameFromFolder} />
           ) : (
             <div className="border border-gray-700 rounded-md p-8 text-center bg-gray-800">
               <p className="text-gray-400">Файлы не найдены</p>

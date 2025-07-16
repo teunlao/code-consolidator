@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { formatFileSize } from '@/lib/format-utils';
 import type { FileNode } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react';
+import { ChevronDown, ChevronRight, File, Folder, ClipboardEdit } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { CodeViewer } from './code-viewer';
 
@@ -12,12 +12,13 @@ interface FileTreeProps {
   data: FileNode;
   onSelect: (path: string, selected: boolean) => void;
   searchQuery?: string; // Добавляем опциональный параметр поискового запроса
+  onSetOutputNameFromFolder: (folderName: string) => void; // Новый prop для установки имени файла
 }
 
 // Используем хранилище для сохранения состояния раскрытых папок между ререндерами
 import { useLocalStorage } from '@/lib/hooks/use-local-storage';
 
-export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
+export function FileTree({ data, onSelect, searchQuery, onSetOutputNameFromFolder }: FileTreeProps) {
   // Используем LocalStorage для хранения состояния раскрытых папок
   const [expanded, setExpanded] = useLocalStorage<Record<string, boolean>>("file-tree-expanded-state", {});
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -238,7 +239,7 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
         <div
           className={cn(
-            'flex items-center py-1 hover:bg-gray-700/70 rounded-sm px-2 cursor-pointer z-10 relative transition-colors duration-200',
+            'group flex items-center py-1 hover:bg-gray-700/70 rounded-sm px-2 cursor-pointer z-10 relative transition-colors duration-200',
             // Если элемент выбран напрямую
             node.selected && 'bg-blue-800/20 border-l-2 border-blue-400',
             // Специальные стили для папок, содержащих выбранные файлы, но не раскрытых
@@ -340,6 +341,21 @@ export function FileTree({ data, onSelect, searchQuery }: FileTreeProps) {
 
           {/* Отображаем размер для файлов и папок */}
           <div className="ml-auto flex items-center gap-2">
+            {/* Кнопка "Установить как имя файла" для папок */}
+            {node.type === 'directory' && (
+              <button
+                type="button"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-200"
+                title="Использовать имя папки для выходного файла"
+                onClick={(e) => {
+                  e.stopPropagation(); // Предотвратить разворачивание/сворачивание папки
+                  onSetOutputNameFromFolder(node.name);
+                }}
+              >
+                <ClipboardEdit className="h-4 w-4" />
+              </button>
+            )}
+            
             {/* Показываем количество выбранных файлов для папок, если есть выбранные */}
             {node.type === 'directory' && selectedFilesCount > 0 && (
               <span className={cn(

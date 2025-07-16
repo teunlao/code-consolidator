@@ -159,10 +159,10 @@ export function ConfigPanel({
         <div className="flex gap-2">
           <Button 
             onClick={onGenerate}
-            disabled={selectedFilesCount === 0}
+            disabled={selectedFilesCount === 0 || !outputFileName.trim()}
             className={cn(
               "flex-1", 
-              selectedFilesCount === 0 
+              (selectedFilesCount === 0 || !outputFileName.trim()) 
                 ? "bg-gray-600 cursor-not-allowed opacity-70" 
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             )}
