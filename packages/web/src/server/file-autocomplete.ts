@@ -33,6 +33,11 @@ export async function generateFilePathSuggestions(
     // Извлекаем имена файлов и директорий из дерева
     const allPaths = extractPaths(fileTree);
     
+    // Проверяем, что allPaths не undefined и является массивом
+    if (!allPaths || !Array.isArray(allPaths)) {
+      return [];
+    }
+    
     // Фильтруем и сортируем пути, соответствующие запросу
     const matchingPaths = allPaths
       // Фильтрация по соответствию запросу (в имени файла или директории)
