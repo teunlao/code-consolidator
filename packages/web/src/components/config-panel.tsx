@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { OpenFileButton } from "./open-file-button";
 import { List, FileOutput } from "lucide-react";
@@ -20,6 +21,8 @@ interface ConfigPanelProps {
   onUseAbsolutePathsChange: (value: boolean) => void;
   outputFileName: string;
   onOutputFileNameChange: (value: string) => void;
+  outputFormat: 'pdf' | 'markdown';
+  onOutputFormatChange: (value: 'pdf' | 'markdown') => void;
   onGenerate: () => void;
   selectedFilesCount: number;
   lastGeneratedPdfPath?: string;
@@ -36,6 +39,8 @@ export function ConfigPanel({
   onUseAbsolutePathsChange,
   outputFileName,
   onOutputFileNameChange,
+  outputFormat,
+  onOutputFormatChange,
   onGenerate,
   selectedFilesCount,
   lastGeneratedPdfPath,
@@ -56,9 +61,30 @@ export function ConfigPanel({
       onBulkSelectPaths(paths);
     }
   };
+  
+  // Обработчик для изменения формата
+  const handleFormatChange = (format: string) => {
+    const newFormat = format as 'pdf' | 'markdown';
+    onOutputFormatChange(newFormat);
+    // Автоматически меняем расширение в имени файла
+    const currentName = outputFileName.replace(/\.(pdf|md)$/i, '');
+    const newExtension = newFormat === 'pdf' ? 'pdf' : 'md';
+    onOutputFileNameChange(`${currentName}.${newExtension}`);
+  };
   return (
     <div className="border border-gray-700 rounded-md p-4 space-y-4 bg-gray-800">
       <h2 className="text-lg font-semibold text-gray-100">Настройки генерации</h2>
+      
+      {/* Выбор формата вывода */}
+      <div className="space-y-2">
+        <Label className="text-gray-200">Формат вывода</Label>
+        <Tabs value={outputFormat} onValueChange={handleFormatChange} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-700 text-gray-200">
+            <TabsTrigger value="pdf" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">PDF</TabsTrigger>
+            <TabsTrigger value="markdown" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Markdown</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
       
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -82,7 +108,7 @@ export function ConfigPanel({
         </div>
         
         <div className="flex items-center justify-between">
-          <Label htmlFor="absolute-paths" className="text-gray-200">Использовать абсолютные пути в PDF</Label>
+          <Label htmlFor="absolute-paths" className="text-gray-200">Использовать абсолютные пути в файле</Label>
           <Switch 
             id="absolute-paths" 
             checked={useAbsolutePaths} 
@@ -97,7 +123,7 @@ export function ConfigPanel({
             id="output-file" 
             value={outputFileName} 
             onChange={(e) => onOutputFileNameChange(e.target.value)} 
-            placeholder="project_code.pdf"
+            placeholder={outputFormat === 'pdf' ? 'project_code.pdf' : 'project_code.md'}
             className="bg-gray-700 border-gray-600 text-gray-200 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
@@ -141,7 +167,7 @@ export function ConfigPanel({
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             )}
           >
-            Сгенерировать PDF{selectedFilesCount > 0 ? ` (${selectedFilesCount} файлов)` : ''}
+            Сгенерировать {outputFormat === 'pdf' ? 'PDF' : 'Markdown'}{selectedFilesCount > 0 ? ` (${selectedFilesCount} файлов)` : ''}
           </Button>
           
           {pdfPath && (
@@ -150,7 +176,7 @@ export function ConfigPanel({
               variant="outline"
               size="default"
               className="bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200 px-3"
-              tooltipText="Открыть сгенерированный PDF"
+              tooltipText={`Открыть сгенерированный ${outputFormat === 'pdf' ? 'PDF' : 'Markdown файл'}`}
             />
           )}
         </div>

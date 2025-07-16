@@ -1,16 +1,22 @@
 {
   "name": "@teunlao/code-consolidator",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "private": false,
-  "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF documentation.",
+  "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF or Markdown documentation.",
   "keywords": [
     "code",
     "documentation",
     "pdf",
+    "markdown",
     "consolidator",
     "dark-theme",
     "ui",
-    "viewer"
+    "viewer",
+    "ai",
+    "chatgpt",
+    "openai",
+    "claude",
+    "cloud"
   ],
   "author": "teunlao (teunlao@gmail.com)",
   "license": "MIT",
@@ -20,6 +26,7 @@
     "directory": "packages/web"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "dev": "next dev",
     "build": "next build && tsc -p tsconfig.bin.json",
     "start": "next start",

@@ -117,7 +117,7 @@ export default function Home() {
     updateActiveSettings({
       includeComments: true,
       newPageForEachFile: true,
-      outputFileName: 'project_code.pdf',
+      outputFileName: 'project_code.md',
       filterSettings: defaultFilterSettings,
       selectedFiles: [],
     });
@@ -163,6 +163,7 @@ export default function Home() {
           includeComments: activeSettings.includeComments,
           newPageForEachFile: activeSettings.newPageForEachFile,
           useAbsolutePaths: activeSettings.useAbsolutePaths,
+          outputFormat: activeSettings.outputFormat,
         }),
       });
 
@@ -334,6 +335,8 @@ export default function Home() {
             onUseAbsolutePathsChange={(value) => updateActiveSettings({ useAbsolutePaths: value })}
             outputFileName={activeSettings.outputFileName}
             onOutputFileNameChange={(value) => updateActiveSettings({ outputFileName: value })}
+            outputFormat={activeSettings.outputFormat}
+            onOutputFormatChange={(value) => updateActiveSettings({ outputFormat: value })}
             onGenerate={handleGeneratePdf}
             selectedFilesCount={selectedFilesCount}
             lastGeneratedPdfPath={generatedPdfPath}
@@ -349,7 +352,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle className="flex items-center text-gray-100">
               <Check className="h-6 w-6 text-green-400 mr-2" />
-              PDF успешно сгенерирован
+              Файл успешно сгенерирован
             </DialogTitle>
           </DialogHeader>
 
@@ -385,7 +388,7 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl flex items-center border border-gray-700">
             <Loader2 className="h-6 w-6 animate-spin text-blue-400 mr-3" />
-            <span className="text-gray-200">Генерация PDF...</span>
+            <span className="text-gray-200">Генерация файла...</span>
           </div>
         </div>
       )}

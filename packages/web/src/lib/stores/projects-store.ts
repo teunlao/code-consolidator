@@ -9,6 +9,7 @@ export interface ProjectSettings {
   newPageForEachFile: boolean;
   outputFileName: string;
   useAbsolutePaths: boolean; // Новое свойство для использования абсолютных путей
+  outputFormat: 'pdf' | 'markdown'; // Новое поле для выбора формата
   filterSettings: FilterSettings;
   selectedFiles: string[]; // Пути к выбранным файлам
 }
@@ -20,8 +21,6 @@ export interface Profile {
   settings: ProjectSettings;
   createdAt: number;
   updatedAt: number;
-  // Новое свойство для явного переопределения настроек
-  overrides: Partial<Record<keyof ProjectSettings, boolean>>;
 }
 
 export interface Project {
@@ -38,8 +37,9 @@ export interface Project {
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   includeComments: true,
   newPageForEachFile: true,
-  outputFileName: 'project_code.pdf',
+  outputFileName: 'project_code.md',
   useAbsolutePaths: true, // Абсолютные пути включены по умолчанию
+  outputFormat: 'markdown', // Значение по умолчанию для формата
   filterSettings: {
     ignoredDirectories: [],
     ignoredFiles: [],
@@ -107,34 +107,17 @@ export const useProjectsStore = create<ProjectState>()(
         return activeProject.profiles.find((p) => p.id === activeProfileId);
       },
 
-      // Обновленный метод для получения настроек с наследованием от базового профиля
+      // Простое получение настроек с приоритетом настроек профиля
       getActiveSettings: () => {
         const activeProfile = get().getActiveProfile();
         const activeProject = get().getActiveProject();
 
         if (activeProfile && activeProject) {
-          // Объединяем базовые настройки с настройками профиля
-          // В настройках профиля содержатся только явно переопределенные настройки
-          const mergedSettings = { ...activeProject.baseSettings };
-          
-          // Особая обработка для selectedFiles - массив должен быть либо полностью переопределен,
-          // либо полностью наследован - частичное слияние массивов не имеет смысла
-          Object.keys(activeProfile.settings).forEach(key => {
-            const settingKey = key as keyof ProjectSettings;
-            // Если настройка явно переопределена или нет информации о переопределении (обратная совместимость)
-            if (!activeProfile.overrides || activeProfile.overrides[settingKey]) {
-              if (settingKey === 'selectedFiles') {
-                // Полностью заменяем массив выбранных файлов
-                mergedSettings.selectedFiles = [...activeProfile.settings.selectedFiles];
-              } else {
-                // Для других полей используем значение из профиля
-                // @ts-ignore - динамический доступ к полям
-                mergedSettings[settingKey] = activeProfile.settings[settingKey];
-              }
-            }
-          });
-          
-          return mergedSettings;
+          // Просто объединяем настройки. Настройки профиля имеют приоритет.
+          return { 
+            ...activeProject.baseSettings, 
+            ...activeProfile.settings 
+          };
         }
 
         if (activeProject) {
@@ -200,7 +183,7 @@ export const useProjectsStore = create<ProjectState>()(
           ? { ...project.baseSettings } 
           : { ...DEFAULT_PROJECT_SETTINGS };
 
-        // Создаем новый профиль с пустым overrides
+        // Создаем новый профиль
         const newProfile: Profile = {
           id: uuidv4(),
           name,
@@ -208,7 +191,6 @@ export const useProjectsStore = create<ProjectState>()(
           settings,
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          overrides: {} // Пустой объект переопределений
         };
 
         set((state) => ({
@@ -292,7 +274,6 @@ export const useProjectsStore = create<ProjectState>()(
           name: copyName,
           description: sourceProfile.description,
           settings: { ...sourceProfile.settings },
-          overrides: { ...sourceProfile.overrides },
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
@@ -328,33 +309,14 @@ export const useProjectsStore = create<ProjectState>()(
 
       // Обновление настроек
       updateActiveSettings: (updates) => {
-        const { activeProjectId, activeProfileId } = get();
+        const { activeProjectId } = get();
         const activeProfile = get().getActiveProfile();
         const activeProject = get().getActiveProject();
 
         if (activeProfile && activeProjectId) {
-          // Обновляем настройки в активном профиле и помечаем их как переопределенные
-          const updatedOverrides = { ...activeProfile.overrides };
-          
-          // Отмечаем все обновляемые поля как переопределенные
-          Object.keys(updates).forEach(key => {
-            const settingKey = key as keyof ProjectSettings;
-            updatedOverrides[settingKey] = true;
-            
-            // Особая обработка для selectedFiles - всегда создаем новый массив
-            if (settingKey === 'selectedFiles' && 'selectedFiles' in updates) {
-              // Для обратной совместимости проверяем существование массива
-              const selectedFiles = updates.selectedFiles || [];
-              updates = { 
-                ...updates, 
-                selectedFiles: [...selectedFiles] 
-              };
-            }
-          });
-          
+          // Просто обновляем настройки без логики overrides
           get().updateProfile(activeProjectId, activeProfile.id, {
             settings: { ...activeProfile.settings, ...updates },
-            overrides: updatedOverrides
           });
         } else if (activeProject) {
           // Обновляем базовые настройки проекта
