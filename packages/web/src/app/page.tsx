@@ -32,7 +32,7 @@ export default function Home() {
 
   // Храним информацию о том, была ли первая загрузка
   const [initialLoadDone, setInitialLoadDone] = useState(false);
-  
+
   // Получаем идентификаторы активных проекта и профиля для отслеживания изменений
   const { activeProjectId, activeProfileId } = useProjectsStore();
 
@@ -46,11 +46,11 @@ export default function Home() {
       setInitialLoadDone(true);
     }
   }, [
-    activeSettings.filterSettings, 
-    initialLoadDone, 
+    activeSettings.filterSettings,
+    initialLoadDone,
     // Теперь эффект будет срабатывать при смене профиля или проекта
-    activeProjectId, 
-    activeProfileId
+    activeProjectId,
+    activeProfileId,
   ]);
 
   // Функция для загрузки дерева файлов
@@ -83,7 +83,7 @@ export default function Home() {
         // Явно получаем самые актуальные настройки для текущего профиля
         // Это особенно важно при переключении между профилями
         const currentSettings = getActiveSettings();
-        
+
         // Применяем сохраненные выбранные файлы к полученному дереву
         const treeWithSelection =
           currentSettings.selectedFiles.length > 0
@@ -118,6 +118,7 @@ export default function Home() {
       includeComments: true,
       newPageForEachFile: true,
       outputFileName: 'project_code.md',
+      outputFormat: 'markdown',
       filterSettings: defaultFilterSettings,
       selectedFiles: [],
     });
@@ -134,7 +135,7 @@ export default function Home() {
     setFileTree(updatedTree);
 
     const selectedFiles = getSelectedFilePaths(updatedTree);
-    
+
     // Сбрасываем имя файла и обновляем список выбранных файлов одним вызовом
     updateActiveSettings({
       selectedFiles,
@@ -271,7 +272,8 @@ export default function Home() {
 
   // Функция для установки имени файла из названия папки
   const handleSetOutputNameFromFolder = (folderName: string) => {
-    const extension = activeSettings.outputFormat === 'pdf' ? '.pdf' : '.md';
+    const extension =
+      activeSettings.outputFormat === 'pdf' ? '.pdf' : activeSettings.outputFormat === 'markdown' ? '.md' : '.zip';
     const sanitizedName = folderName.replace(/[^a-zA-Z0-9_-]/g, '_'); // Очистка имени
     updateActiveSettings({ outputFileName: `${sanitizedName}${extension}` });
   };
@@ -302,7 +304,12 @@ export default function Home() {
           <SearchFilter onSearch={handleSearch} filterSettings={activeSettings.filterSettings} />
 
           {filteredTree ? (
-            <FileTree data={filteredTree} onSelect={handleSelectNode} searchQuery={searchQuery} onSetOutputNameFromFolder={handleSetOutputNameFromFolder} />
+            <FileTree
+              data={filteredTree}
+              onSelect={handleSelectNode}
+              searchQuery={searchQuery}
+              onSetOutputNameFromFolder={handleSetOutputNameFromFolder}
+            />
           ) : (
             <div className="border border-gray-700 rounded-md p-8 text-center bg-gray-800">
               <p className="text-gray-400">Файлы не найдены</p>

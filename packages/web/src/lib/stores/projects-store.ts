@@ -9,7 +9,7 @@ export interface ProjectSettings {
   newPageForEachFile: boolean;
   outputFileName: string;
   useAbsolutePaths: boolean; // Новое свойство для использования абсолютных путей
-  outputFormat: 'pdf' | 'markdown'; // Новое поле для выбора формата
+  outputFormat: 'pdf' | 'markdown' | 'zip'; // Новое поле для выбора формата
   filterSettings: FilterSettings;
   selectedFiles: string[]; // Пути к выбранным файлам
 }
@@ -69,7 +69,7 @@ interface ProjectState {
   createProfile: (projectId: string, name: string, description?: string, inheritFromProject?: boolean) => Profile;
   updateProfile: (projectId: string, profileId: string, updates: Partial<Profile>) => void;
   deleteProfile: (projectId: string, profileId: string) => void;
-  
+
   // Новый метод для копирования профиля
   copyProfile: (projectId: string, profileId: string, newName?: string) => Profile;
 
@@ -114,9 +114,9 @@ export const useProjectsStore = create<ProjectState>()(
 
         if (activeProfile && activeProject) {
           // Просто объединяем настройки. Настройки профиля имеют приоритет.
-          return { 
-            ...activeProject.baseSettings, 
-            ...activeProfile.settings 
+          return {
+            ...activeProject.baseSettings,
+            ...activeProfile.settings,
           };
         }
 
@@ -179,9 +179,7 @@ export const useProjectsStore = create<ProjectState>()(
 
         // При создании профиля с наследованием, устанавливаем только базовые настройки
         // Теперь профиль наследует изменения в базовых настройках автоматически
-        const settings = inheritFromProject && project 
-          ? { ...project.baseSettings } 
-          : { ...DEFAULT_PROJECT_SETTINGS };
+        const settings = inheritFromProject && project ? { ...project.baseSettings } : { ...DEFAULT_PROJECT_SETTINGS };
 
         // Создаем новый профиль
         const newProfile: Profile = {
@@ -250,25 +248,25 @@ export const useProjectsStore = create<ProjectState>()(
           return updatedState as ProjectState;
         });
       },
-      
+
       // Метод для копирования профиля
       copyProfile: (projectId, profileId) => {
         const { projects } = get();
-        const project = projects.find(p => p.id === projectId);
-        
+        const project = projects.find((p) => p.id === projectId);
+
         if (!project) {
           throw new Error('Проект не найден');
         }
-        
-        const sourceProfile = project.profiles.find(p => p.id === profileId);
-        
+
+        const sourceProfile = project.profiles.find((p) => p.id === profileId);
+
         if (!sourceProfile) {
           throw new Error('Профиль не найден');
         }
-        
+
         // Создаем копию профиля с новым ID
         const copyName = `${sourceProfile.name} (копия)`;
-        
+
         const newProfile: Profile = {
           id: uuidv4(),
           name: copyName,
@@ -277,7 +275,7 @@ export const useProjectsStore = create<ProjectState>()(
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
-        
+
         set((state) => ({
           projects: state.projects.map((p) => {
             if (p.id === projectId) {
@@ -291,7 +289,7 @@ export const useProjectsStore = create<ProjectState>()(
           }),
           activeProfileId: newProfile.id, // Сразу активируем скопированный профиль
         }));
-        
+
         return newProfile;
       },
 
@@ -330,7 +328,7 @@ export const useProjectsStore = create<ProjectState>()(
       applySelectedFilesToTree: (fileTree, selectedFiles) => {
         // Создаем новый Set для быстрого поиска
         const filesSet = new Set(selectedFiles);
-        
+
         // Сначала выполняем глубокое клонирование дерева, чтобы избежать мутаций
         const clonedTree = structuredClone(fileTree) as FileNode;
 
@@ -338,22 +336,20 @@ export const useProjectsStore = create<ProjectState>()(
         const updateSelection = (node: FileNode): FileNode => {
           // Для файлов - просто проверяем наличие пути в списке выбранных
           if (node.type === 'file') {
-            return { 
-              ...node, 
-              selected: filesSet.has(node.path)
+            return {
+              ...node,
+              selected: filesSet.has(node.path),
             };
           }
 
           // Для директорий - обрабатываем дочерние элементы
           if (node.children) {
             // Сначала обновляем всех детей
-            const updatedChildren = node.children.map(child => updateSelection(child));
-            
+            const updatedChildren = node.children.map((child) => updateSelection(child));
+
             // Директория считается выбранной, если все её дочерние элементы выбраны
-            const allChildrenSelected = 
-              updatedChildren.length > 0 && 
-              updatedChildren.every(child => child.selected);
-            
+            const allChildrenSelected = updatedChildren.length > 0 && updatedChildren.every((child) => child.selected);
+
             return {
               ...node,
               selected: allChildrenSelected,

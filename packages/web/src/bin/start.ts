@@ -86,13 +86,26 @@ async function startApp() {
   // Используем npx next start с путем к .next директории
   const appProcess = spawn('npx', ['next', 'start', '--port', PORT.toString()], {
     cwd: packageDir, // Используем директорию пакета для запуска next
-    stdio: 'inherit',
+    stdio: ['inherit', 'pipe', 'pipe'], // Перехватываем stdout и stderr
     shell: true,
     env: {
       ...process.env,
       NODE_ENV: 'production', // Убедимся, что используется production режим
       USER_PROJECT_DIR: userProjectDir, // Передаем директорию пользователя как переменную окружения
     },
+  });
+
+  // Обработчики для диагностики
+  appProcess.stdout.on('data', (data) => {
+    console.log(data.toString());
+  });
+
+  appProcess.stderr.on('data', (data) => {
+    console.error(`[Next.js STDERR]:\n${data.toString()}`);
+  });
+
+  appProcess.on('error', (err) => {
+    console.error('Failed to start subprocess.', err);
   });
 
   try {
