@@ -1,13 +1,14 @@
 {
   "name": "@teunlao/code-consolidator",
-  "version": "0.11.6",
+  "version": "0.12.0",
   "private": false,
-  "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF or Markdown documentation.",
+  "description": "A modern dark-themed UI for code consolidation and documentation. Easily select files from your project and generate PDF, Markdown, or ZIP documentation.",
   "keywords": [
     "code",
     "documentation",
     "pdf",
     "markdown",
+    "zip",
     "consolidator",
     "dark-theme",
     "ui",
@@ -36,12 +37,7 @@
     "before-publish": "pnpm run build",
     "publish-package": "pnpm run before-publish && pnpm run clean-next-cache && pnpm publish --access public"
   },
-  "files": [
-    "dist",
-    ".next",
-    "next.config.js",
-    "package.json"
-  ],
+  "files": ["dist", ".next", "next.config.js", "package.json"],
   "bin": {
     "cc-start": "./dist/bin/start.js"
   },
